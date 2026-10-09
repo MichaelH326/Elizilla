@@ -1,0 +1,154 @@
+# Training corpus for the NeoEliza small language model.
+#
+# Format:   intent: reply text with <slot> placeholders
+# The intent names match the rule names in rules.py (plus a few extras like
+# "detail" and "open"). Every rule's own templates are added automatically,
+# so this file only needs extra examples of the listening style.
+# Slots: <topic> <describer> <follow> <who> <whom> <action> <acting> <what>
+#        <rest> <says> <n1> <n2> <before> <clause> <when> <d>
+
+sad: that sounds really heavy . what has been weighing on you the most ?
+sad: i'm sorry it's been like this . when did you start feeling <describer> ?
+sad: feeling <describer> can make everything harder . what does a hard day look like for you ?
+sad: it sounds like a lot to carry . who knows you've been feeling this way ?
+sad: what usually happens right before you start feeling <describer> ?
+sad: i'm glad you told me . what would help you feel even a little lighter today ?
+sad: what part of feeling <describer> is the hardest to talk about ?
+anxious: that sounds stressful . what's the part that worries you most ?
+anxious: what goes through your mind when you think about <follow> ?
+anxious: feeling <describer> about <follow> makes sense . what would make it feel more manageable ?
+anxious: when you feel <describer> , what do you usually do to calm down ?
+anxious: what's the story your mind keeps telling you about <follow> ?
+anxious: how long have you been feeling <describer> like this ?
+angry: that sounds frustrating . what happened ?
+angry: what was the moment that made you <describer> ?
+angry: what do you wish had happened instead ?
+angry: when you feel <describer> , what do you usually do with it ?
+happy: that's really good to hear . what's been making you feel <describer> ?
+happy: i love that . what's been the best part so far ?
+happy: what do you think helped you feel <describer> today ?
+happy: how can you keep that feeling going ?
+tired: that sounds draining . what's been taking the most out of you ?
+tired: what has your sleep been like lately ?
+tired: when was the last time you really got to rest ?
+tired: what would a real break look like for you right now ?
+lonely: that sounds really hard . who do you miss talking to ?
+lonely: when do you feel <describer> the most ?
+lonely: what kind of connection do you wish you had more of ?
+busy-me: it sounds like a lot is going on . what's taking up most of your time ?
+busy-me: what does your week look like right now ?
+busy-me: what would you drop if you could ?
+busy-thing: <describer> how ? what's been happening ?
+busy-thing: it sounds like a lot is going on . what's the biggest thing right now ?
+busy-thing: what's been making <whom> so <describer> lately ?
+busy-thing: how are you keeping up with all of it ?
+good-thing: that's great to hear . what's been going well ?
+good-thing: nice . what made <whom> so <describer> ?
+good-thing: what do you think made the difference ?
+good-thing: what part of it are you enjoying most ?
+bad-thing: that sounds rough . what's been the hardest part ?
+bad-thing: what happened to make <whom> so <describer> ?
+bad-thing: how are you handling all of that ?
+feel-like: what makes you feel like <follow> ?
+feel-like: when did you first start to feel like <follow> ?
+feel-like: what would you tell a friend who felt like <follow> ?
+feel: what does that feeling feel like for you ?
+feel: when does that feeling show up the most ?
+feel: what do you think that feeling is trying to tell you ?
+family-who: <who> <says> ? how do you feel about that ?
+family-who: what's it like when <who> <says> ?
+family-who: how do you and your <topic> usually get along ?
+family-who: what do you wish your <topic> understood about you ?
+family: what's your relationship with your <topic> like ?
+family: how has your <topic> been lately ?
+family: what's something you appreciate about your <topic> ?
+friend: how did you and your <topic> meet ?
+friend: what do you like most about your <topic> ?
+friend: how has your <topic> been lately ?
+boss: how do you and your <topic> usually get along ?
+boss: what's it like working with your <topic> ?
+boss: what do you wish your <topic> would do differently ?
+fight: what was the fight about ?
+fight: how did it start ?
+fight: how are things between you now ?
+no-time: it sounds like your time is stretched thin . what's using up most of it ?
+no-time: when could you fit in time to <follow> ?
+no-time: what would help you find time to <follow> ?
+no-time: what's getting in the way of having time to <follow> ?
+pair: juggling <n1> and <n2> is a lot . how are you keeping up with both ?
+pair: how are <n1> and <n2> fitting together right now ?
+pair: which one needs more of your energy right now , <n1> or <n2> ?
+task: how is the <topic> going so far ?
+task: what's the hardest part of the <topic> ?
+task: how do you feel about how the <topic> is going ?
+task: what would make the <topic> feel more doable ?
+work: how have things been at your <topic> lately ?
+work: what's your <topic> like day to day ?
+work: what do you think about your <topic> these days ?
+work-low: what's been the hardest part of your <topic> lately ?
+work-low: what would make your <topic> feel easier ?
+work-good: what's been going right at your <topic> ?
+work-good: what do you enjoy most about your <topic> ?
+activity: what got you into <topic> ?
+activity: what do you like most about <topic> ?
+activity: how does <topic> make you feel ?
+want-to: what makes you want to <follow> ?
+want-to: what would it mean for you to <follow> ?
+want-to: what's stopping you from being able to <follow> ?
+want-to: how long have you been thinking about trying to <follow> ?
+want: what makes you want <what> ?
+want: how would things be different if you had <what> ?
+like-that: so <follow> . what makes that so important to you ?
+like-that: it sounds like that matters a lot . what does it mean for you ?
+like-that: what would it feel like if that changed ?
+like-doing: what do you <action> about <follow> ?
+like-doing: what got you into <follow> ?
+like-doing: how does <follow> make you feel ?
+like: what is it about <what> that you <action> ?
+like: how did you get into <what> ?
+hate-when: what about it bothers you most when <follow> ?
+hate-when: what do you usually do when <follow> ?
+hate-when: how does it feel when <follow> ?
+hate: what about <what> bothers you the most ?
+hate: what makes <what> so hard to deal with ?
+belief: what makes you think <follow> ?
+belief: what would it mean if <follow> ?
+belief: what makes you feel so sure that <follow> ?
+cannot: what makes it feel like you can't <action> ?
+cannot: what would need to change for you to <action> ?
+dont-know: that's okay . what's the first thing that comes to mind ?
+dont-know: there's no wrong answer here . what feels closest to true ?
+dont-know: what would you guess if you had to ?
+dream: what do you think that dream was about ?
+dream: how did that dream make you feel ?
+dream: what stood out to you most in the dream ?
+loss: i'm so sorry . how are you holding up ?
+loss: that's a big loss . what has it been like for you ?
+loss: i'm sorry . what do you miss most ?
+everyone: who in particular are you thinking of ?
+everyone: when did it start to feel like <who> was like that ?
+i-am: what's it like being <rest> ?
+i-am: how long have you been <rest> ?
+detail: what kind of <d> ?
+detail: what's the <d> like ?
+detail: how do you feel about the <d> ?
+detail: what got you into the <d> ?
+detail: what's the best part of the <d> ?
+mixed: so <before> , but <clause> . how are you holding both of those ?
+mixed: it sounds like there's a good part and a hard part . how are you balancing them ?
+worry: what's the worry that keeps coming back ?
+worry: what helps when the worry gets loud ?
+sleep: what keeps you up at night ?
+sleep: what's on your mind when you can't sleep ?
+lose: what happened ?
+lose: how are you feeling about it now ?
+ignore: what does it feel like when that happens ?
+ignore: who do you wish would notice you more ?
+open: what else comes to mind ?
+open: how do you feel about that ?
+open: what's that like for you ?
+open: what happened next ?
+open: what do you make of that ?
+open: what's the most important part of that for you ?
+open: how did that feel ?
+open: what's on your mind about it now ?
