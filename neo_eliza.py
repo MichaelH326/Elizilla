@@ -11,10 +11,17 @@ Pipeline for every message:
   5. score        rule weight + how many sections matched + mood fit
                   - novelty penalty (topics already discussed)
                   - recently used rules - rules whose replies are used up
-  6. reply        fill the template from the sections, flipped to Eliza's
-                  point of view, always ending in an open-ended question
+  6. reply        the winning rule is a listening plan: what to ask about,
+                  plus the person's own words as slots. The SLM (slm.py)
+                  writes new wording for it. If no generated reply passes
+                  the SLM's grammar and confidence gates, a hand-written
+                  template is used. Every reply ends in an open-ended question.
 
-Run with --debug to see the sections and the winning rule for each message.
+Like Mira, it is honest about its limits: it says it can't know the time,
+weather or news, doesn't guess at facts, and says it can't do tasks.
+
+Run with --debug to see the sections, the winning rule, and where each reply
+came from. Run with --no-slm to use only the hand-written templates.
 """
 
 import math
@@ -26,6 +33,7 @@ from collections import Counter, defaultdict, deque
 from lexicon import WORD_TO_CLASS, gerund
 from rules import RULES, PHRASES
 from sentence import normalize, parse, main_frame, reflect
+from slm import SLM
 
 # ---------------------------------------------------------------------------
 # Emotion model
@@ -49,6 +57,21 @@ INTENSIFIERS = {"very": 1.5, "really": 1.4, "so": 1.4, "extremely": 1.8,
                 "slightly": 0.6, "kinda": 0.7, "somewhat": 0.7, "bit": 0.7}
 CRISIS_PATTERNS = [r"\bkill (my ?self|myself)\b", r"\bsuicid", r"\bend (it all|my life)\b",
                    r"\bwant to die\b", r"\bhurt (my ?self|myself)\b"]
+
+
+# Mira's honesty contract: say what you can't know instead of guessing.
+CANT_KNOW = re.compile(r"\b(?:what time|what day is|what is the date|today s date|todays date"
+                       r"|weather|forecast|news|stock price|the score)\b")
+FACT_QUESTION = re.compile(r"^(?:what|who|when|where|how many|how much|how far|how old|how tall)\b.*\b"
+                           r"(?:capital|president|population|invented|discovered|distance|tallest"
+                           r"|largest|biggest|fastest|square root|plus|minus|times|meaning of|define"
+                           r"|definition|located|born)\b")
+TASK_REQUEST = re.compile(r"^(?:can|could|will|would) you (?:please )?(?:help me (?:with|write|do|fix)"
+                          r"|write|code|fix|calculate|search|look up|google|book|order|send|make me|do my)\b"
+                          r"|^(?:please )?(?:write|calculate|search|look up|google|translate) ")
+CANT_KNOW_SAY = ["I can't know that, I don't have a clock or the internet. What made you think of it?"]
+FACT_SAY = ["I don't know that one, and I'd rather not guess. What got you curious about it?"]
+CANT_DO_SAY = ["I can't do that one, honestly. I'm only here to listen. What's going on with it?"]
 
 
 def emotion_value(tagged_word):
@@ -331,6 +354,7 @@ FILLER_WORDS = {"no", "yes", "yeah", "ok", "okay", "well", "um", "uh", "so", "oh
 # count toward "we've already talked about this".
 GENERIC_HITS = {"@self", "@you", "@it", "@they", "@other", "be", "have", "do", "get", "go"}
 
+WH_START = {"what", "who", "when", "where", "how", "why", "which"}
 CLOSED_QUESTION = re.compile(
     r"(?:do|does|did|is|are|was|were|have|has|can|could|would|will|should|am)\b", re.I)
 
@@ -340,8 +364,10 @@ CLOSED_QUESTION = re.compile(
 # ---------------------------------------------------------------------------
 
 class NeoEliza:
-    def __init__(self, seed=None, debug=False):
+    def __init__(self, seed=None, debug=False, use_slm=True):
         self.rng = random.Random(seed)
+        self.writer = SLM(seed=seed) if use_slm else None
+        self.last_source = None
         self.emotion = EmotionModel()
         self.memory = Memory()
         self.template_uses = Counter()
@@ -380,6 +406,26 @@ class NeoEliza:
         self.template_uses[t] += 1
         self.last_template = t
         return self._fill(t, slots)
+
+    def write(self, intent, templates, slots=None):
+        """Generated wording for a listening plan, or a template if the SLM
+        has nothing that passes its gates."""
+        slots = slots or {}
+        if self.writer:
+            text, info = self.writer.write(intent, slots, avoid=self.asked)
+            if text:
+                self.last_source = f"slm:{intent} conf={info['confidence']}" + (" new" if info["new_sentence"] else "")
+                return text
+        self.last_source = f"template:{intent}"
+        return self.pick(templates, slots)
+
+    def react(self, mood, templates):
+        """A short reaction for the front of a reply ("Aw, that sounds rough.")."""
+        if self.writer:
+            text = self.writer.react(mood, avoid=self.asked)
+            if text:
+                return text + " "
+        return self.pick(templates)
 
     def exhausted(self, templates, slots):
         filled = [self._fill(t, slots) for t in self._usable(templates, slots)]
@@ -438,6 +484,7 @@ class NeoEliza:
     # --- main entry point ---
     def respond(self, text):
         self.turn += 1
+        self.last_source = None
         raw = text.strip()
         words = normalize(raw)
         sent = " ".join(words)
@@ -471,10 +518,22 @@ class NeoEliza:
             if k == "name":
                 return self._say(f"Nice to meet you, {v.capitalize()}. What brings you here today?", raw)
 
+        # Honesty: things a small offline listener can't know or do.
+        if raw.endswith("?") or toks[0] in WH_START:
+            if CANT_KNOW.search(sent):
+                self.last_rule = "cant-know"
+                return self._say(self.write("cant-know", CANT_KNOW_SAY), raw)
+            if FACT_QUESTION.search(sent):
+                self.last_rule = "dont-know-fact"
+                return self._say(self.write("dont-know-fact", FACT_SAY), raw)
+        if TASK_REQUEST.search(sent):
+            self.last_rule = "cant-do"
+            return self._say(self.write("cant-do", CANT_DO_SAY), raw)
+
         # Dialogue acts
         if (toks in (["what", "do", "you", "mean"], ["huh"], ["what"])
                 or sent.startswith(("i do not understand", "i am confused", "what are you talking about"))) and self.last_bot:
-            return self._say(self.pick(CLARIFY), raw, keep_last=True)
+            return self._say(self.write("clarify", CLARIFY), raw, keep_last=True)
         if toks in (["why"], ["why", "do", "you", "ask"]) and self.last_user:
             return self._say(self.pick(WHY_FOLLOWUP, {"prev": self.last_user}), raw, keep_last=True)
 
@@ -501,7 +560,7 @@ class NeoEliza:
 
         if detail and (not cands or cands[0][0] < 9.5):
             self.last_rule = "detail"
-            return self._say(self.pick(DETAIL_Q, {"d": detail}), raw)
+            return self._say(self.write("detail", DETAIL_Q, {"d": detail}), raw)
 
         if cands and cands[0][0] > 4:
             score, rule, slots = cands[0]
@@ -509,10 +568,11 @@ class NeoEliza:
             self.recent_rules.append(rule["name"])
             if self.debug:
                 print("  top rules: " + ", ".join(f"{r['name']}={s:.1f}" for s, r, _ in cands[:4]))
-            reply = self.pick(rule["say"], slots)
-            prefix = self.pick(EMPATHY_PREFIX[self.emotion.label]) if rule.get("mood") == "low" and self.emotion.last_turn[2] else ""
-            if prefix and not reply.lower().startswith(("i'm sorry", "that")):
-                reply = prefix + reply
+            reply = self.write(rule["name"], rule["say"], slots)
+            mood = self.emotion.label
+            if (rule.get("mood") == mood != "neutral" and self.emotion.last_turn[2]
+                    and not re.search(r"[.!] ", reply)):     # no reaction in front yet
+                reply = self.react("low" if mood == "low" else "positive", EMPATHY_PREFIX[mood]) + reply
             return self._say(reply, raw)
 
         self.last_rule = "fallback"
@@ -541,9 +601,9 @@ class NeoEliza:
         v_turn, _, hits = self.emotion.last_turn
         ack, follow = "", None
         if hits and v_turn > 0.2:
-            ack, follow = self.pick(ACK_POS), self.pick(FOLLOW_POS)
+            ack, follow = self.react("positive", ACK_POS).strip(), self.write("follow-positive", FOLLOW_POS)
         elif hits and v_turn < -0.2:
-            ack, follow = self.pick(ACK_NEG), self.pick(FOLLOW_NEG)
+            ack, follow = self.react("low", ACK_NEG).strip(), self.write("follow-low", FOLLOW_NEG)
         frag = list(toks)
         while frag and frag[0] in FILLER_WORDS | {"just"}:
             frag.pop(0)
@@ -558,7 +618,7 @@ class NeoEliza:
             echo = "It sounds like " + mirror + "."
         else:
             echo = ""
-        return " ".join(x for x in (echo, ack, follow or self.pick(OPEN)) if x)
+        return " ".join(x for x in (echo, ack, follow or self.write("open", OPEN)) if x)
 
     def _mark_seen(self, frames):
         keys = set()
@@ -586,7 +646,9 @@ class NeoEliza:
         # Every turn ends with an open-ended question so the conversation keeps moving.
         last = re.split(r"(?<=[.!?])\s+", reply.strip())[-1]
         if not reply.rstrip().endswith("?") or CLOSED_QUESTION.match(last):
-            reply = reply.rstrip() + " " + self.pick(OPEN)
+            source = self.last_source
+            reply = reply.rstrip() + " " + self.write("open", OPEN)
+            self.last_source = source
         self.asked.add(reply)
         self.asked.update(re.split(r"(?<=[.!?])\s+", reply.strip()))
         self.last_bot = reply
@@ -601,7 +663,7 @@ class NeoEliza:
 
 def main():
     debug = "--debug" in sys.argv
-    bot = NeoEliza(debug=debug)
+    bot = NeoEliza(debug=debug, use_slm="--no-slm" not in sys.argv)
     print("NeoEliza: Hello, I'm NeoEliza. How are you feeling today?")
     print("          (type 'quit' to leave, '/memory' to see what I remember)\n")
     while True:
@@ -621,9 +683,10 @@ def main():
                 print(f"  {k}: {vs}")
             print(f"  mood: {bot.emotion.label}")
             continue
+        bot.last_source = None
         print("NeoEliza:", bot.respond(text))
         if debug:
-            print(f"  (rule: {bot.last_rule})")
+            print(f"  (rule: {bot.last_rule}, words: {bot.last_source or 'fixed'})")
 
 
 if __name__ == "__main__":

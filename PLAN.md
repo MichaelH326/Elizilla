@@ -12,25 +12,25 @@ installs, no GPU. It only listens and talks. It doesn't do tasks.
 | Parser: clauses → who / action / not / what / describer / follow-on / when | `sentence.py` | Done, tested (`test_sections.py`) |
 | Rules written as sections + categories (about 50) | `rules.py` | Done |
 | Engine: scoring, mood, memory, novelty, no-repeat, open-question check | `neo_eliza.py` | Done, tested (`test_open_questions.py`) |
-| Small language model (trigram, Kneser-Ney) that writes reply wording | `slm.py`, `corpus.txt` | **Experimental, not connected to the chat yet** |
+| Small language model (4-gram, Kneser-Ney) that writes every reply from the rule's plan | `slm.py`, `corpus.txt` | **Connected** (`--no-slm` to turn off), tested (`test_slm.py`) |
+| Mira-style honesty: can't know time/weather, won't guess facts, can't do tasks | `neo_eliza.py` | Done |
 
 ### What the SLM does today
-- Trained on 311 sentences (`corpus.txt` plus every template in `rules.py`), and trains in about 0.03 seconds.
-- Topic words are replaced with slots (`<topic>`, `<describer>`...), so it learns reply *shapes*. The parser fills in the person's words.
-- It only uses three-word sequences seen in training, so new sentences come from joining two known replies where they overlap.
-- Good output: "It sounds like a lot is going on. What's been making them so crazy lately?"
-- Bad output still slips through: "What's the coding tasks?", "How do you and your mom?"
+- Trained on about 600 sentences (`corpus.txt` plus every template in `rules.py`), and trains in about 0.05 seconds. A reply takes about 10 ms.
+- The rules pick the intent and slots; the SLM writes the wording; templates are the fallback.
+- New sentences come from joining two known replies where they share two words, but never inside a question's opening words.
+- Gates: cut-off endings, missing verbs, two verbs glued together, double-filled "what" gaps, yes/no questions, joins right before a verb, plus Mira's confidence gate (average and weakest word).
+- `eval_slm.py`, 30 tries per intent: every intent produced a passing reply each time; about a third of distinct replies are new wording.
+- Bad output still slips through sometimes ("How long have you known your best friend lately?"). More corpus lines fix most of these.
 
 ## Roadmap
 
-### Phase 1: Make the SLM good enough to switch on
-1. Grow `corpus.txt` from about 150 hand-written lines to 1,000 or more, with at least 15 per intent.
-2. Add quality gates before a generated reply can be used:
-   - each slot must sit in a position seen in training (e.g. `<topic>` after "your")
-   - the reply must contain a question word (what / how / when / who)
-   - reject sentences cut off mid-phrase ("How do you and your mom?")
-3. Write `eval_slm.py`: generate 50 replies per intent and report % valid, % new wording, and % that are exact copies. It should also write a sheet for rating replies by hand.
-4. Connect it to the chat with a `--no-slm` flag. Use the SLM's reply only if it passes the gates; otherwise use the hand-written template.
+### Phase 1: Make the SLM good enough to switch on (done)
+1. ~~Grow `corpus.txt`~~: 153 → about 440 lines, in Mira's short, warm voice. Still short of 1,000; keep adding, at least 15 per intent.
+2. ~~Quality gates~~ plus Mira's confidence gate.
+3. ~~`eval_slm.py`~~: % written, % new, % copies, and a rating sheet.
+4. ~~Connected to the chat~~ with `--no-slm`.
+5. Next: rate `eval_slm_sheet.tsv` by hand and turn the bad patterns into gates or corpus lines.
 
 ### Phase 2: Modular brain
 Turn the engine into a router over plug-in modules, each with one small interface:
