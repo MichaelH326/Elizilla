@@ -1,0 +1,68 @@
+{"id": "k-copy-1", "split": "known", "behaviour": "B2", "turns": ["honestly my chemistry final is freaking me out"], "expect": {"copy": 0.34}}
+{"id": "k-copy-2", "split": "known", "behaviour": "B2", "turns": ["my boss keeps piling more work on me"], "expect": {"copy": 0.34}}
+{"id": "k-copy-3", "split": "known", "behaviour": "B2", "turns": ["i think my roommate is mad at me"], "expect": {"copy": 0.34}}
+{"id": "k-copy-4", "split": "known", "behaviour": "B2", "turns": ["my little sister borrowed my headphones and broke them"], "expect": {"copy": 0.34}}
+{"id": "k-copy-5", "split": "known", "behaviour": "B2", "turns": ["i cant decide whether to switch schools"], "expect": {"copy": 0.34}}
+{"id": "k-copy-6", "split": "known", "behaviour": "B2", "turns": ["my soccer coach never lets me play"], "expect": {"copy": 0.34}}
+{"id": "k-copy-7", "split": "known", "behaviour": "B2", "turns": ["i finally finished my first painting"], "expect": {"copy": 0.34}}
+{"id": "k-copy-8", "split": "known", "behaviour": "B2", "turns": ["my neighbors dog barks all night"], "expect": {"copy": 0.34}}
+{"id": "k-copy-9", "split": "known", "behaviour": "B2", "turns": ["i keep forgetting to call my grandpa back"], "expect": {"copy": 0.34}}
+{"id": "k-copy-10", "split": "known", "behaviour": "B2", "turns": ["my best friend found a new group of friends"], "expect": {"copy": 0.34}}
+{"id": "k-copy-11", "split": "known", "behaviour": "B2", "turns": ["our landlord is raising the rent again"], "expect": {"copy": 0.34}}
+{"id": "k-copy-12", "split": "known", "behaviour": "B2", "turns": ["i got cut from the volleyball team"], "expect": {"copy": 0.34}}
+{"id": "k-react-1", "split": "known", "behaviour": "B3", "turns": ["i feel so lonely since everyone left for college"], "expect": {"reaction": true}}
+{"id": "k-react-2", "split": "known", "behaviour": "B3", "turns": ["i got into the college i wanted!!"], "expect": {"reaction": true}}
+{"id": "k-react-3", "split": "known", "behaviour": "B3", "turns": ["im really sad that summer is over"], "expect": {"reaction": true}}
+{"id": "k-react-4", "split": "known", "behaviour": "B3", "turns": ["i passed my driving test today"], "expect": {"reaction": true}}
+{"id": "k-detail-1", "split": "known", "behaviour": "B4", "turns": ["i spent all day fixing bugs in my python script"], "expect": {"any": ["python", "script", "bugs"]}}
+{"id": "k-detail-2", "split": "known", "behaviour": "B4", "turns": ["we launched a new marketing campaign at work"], "expect": {"any": ["campaign", "marketing"]}}
+{"id": "k-mixed-1", "split": "known", "behaviour": "B5", "turns": ["the trip was fun but i spent way too much money"], "expect": {"both": [["trip", "fun"], ["money", "spent"]]}}
+{"id": "k-mixed-2", "split": "known", "behaviour": "B5", "turns": ["i love my job but my coworkers are exhausting"], "expect": {"both": [["job", "love"], ["coworkers", "exhausting"]]}}
+{"id": "k-world-1", "split": "known", "behaviour": "B11", "turns": ["how many legs does a spider have?"], "expect": {"copy": 0.34}}
+{"id": "k-world-2", "split": "known", "behaviour": "B11", "turns": ["what year did the titanic sink?"], "expect": {"copy": 0.34}}
+{"id": "k-world-3", "split": "known", "behaviour": "B11", "turns": ["whats the tallest mountain in the world?"], "expect": {"copy": 0.34}}
+{"id": "k-req-1", "split": "known", "behaviour": "B12", "turns": ["can you write a cover letter for me"], "expect": {"any": ["you want", "you'd like", "someone to", "cover letter"]}}
+{"id": "k-req-2", "split": "known", "behaviour": "B12", "turns": ["could you help me with my math homework"], "expect": {"any": ["you want", "you'd like", "someone to", "math homework"]}}
+{"id": "k-bot-1", "split": "known", "behaviour": "B14", "turns": ["do you have feelings?"], "expect": {"any": ["you"]}}
+{"id": "k-bot-2", "split": "known", "behaviour": "B14", "turns": ["are you smarter than me"], "expect": {"any": ["you"]}}
+{"id": "k-mem-1", "split": "known", "behaviour": "B6", "turns": ["my sister is getting married in june", "i have to give a speech", "ive been writing it all week", "anyway", "its this saturday actually"], "check": 4, "expect": {"any": ["sister", "wedding", "married", "speech"]}}
+{"id": "k-mem-2", "split": "known", "behaviour": "B6", "turns": ["i started a new job at a bakery", "the hours are early", "like 4am early", "ok", "i like it though"], "check": 4, "expect": {"any": ["bakery", "job", "early", "hours"]}}
+{"id": "k-name-1", "split": "known", "behaviour": "B7", "turns": ["hey", "my name is jordan", "work has been rough lately"], "check": 1, "expect": {"any": ["jordan"]}}
+{"id": "k-name-2", "split": "known", "behaviour": "B7", "turns": ["call me priya", "school is a lot right now"], "check": 0, "expect": {"any": ["priya"]}}
+{"id": "k-short-1", "split": "known", "behaviour": "B8", "turns": ["hi", "idk", "nah"], "check": 2, "expect": {"not_generic": true}}
+{"id": "k-short-2", "split": "known", "behaviour": "B8", "turns": ["hey", "meh", "dunno"], "check": 2, "expect": {"not_generic": true}}
+{"id": "k-rep-1", "split": "known", "behaviour": "B9", "turns": ["my brother keeps reading my texts", "it really bugs me", "my brother keeps reading my texts"], "check": 2, "expect": {"any": ["said that", "second time", "again", "a moment ago", "already", "twice"]}}
+{"id": "k-why-1", "split": "known", "behaviour": "B10", "turns": ["my job is stressing me out", "why?"], "check": 1, "expect": {"any": ["because", "you said", "asked", "stressing"]}}
+{"id": "k-clar-1", "split": "known", "behaviour": "B10", "turns": ["my week was weird", "what do you mean"], "check": 1, "expect": {"any": ["mean", "sorry", "clear", "simply", "inviting", "let me", "asked", "question"]}}
+{"id": "h-copy-1", "split": "held-out", "behaviour": "B2", "turns": ["a customer yelled at me today for no reason"], "expect": {"copy": 0.34}}
+{"id": "h-copy-2", "split": "held-out", "behaviour": "B2", "turns": ["the heater in my apartment broke and its freezing"], "expect": {"copy": 0.34}}
+{"id": "h-copy-3", "split": "held-out", "behaviour": "B2", "turns": ["i missed my train this morning and was late"], "expect": {"copy": 0.34}}
+{"id": "h-copy-4", "split": "held-out", "behaviour": "B2", "turns": ["i sprained my ankle playing soccer"], "expect": {"copy": 0.34}}
+{"id": "h-copy-5", "split": "held-out", "behaviour": "B2", "turns": ["my account got hacked last night"], "expect": {"copy": 0.34}}
+{"id": "h-copy-6", "split": "held-out", "behaviour": "B2", "turns": ["i finally built my own computer"], "expect": {"copy": 0.34}}
+{"id": "h-copy-7", "split": "held-out", "behaviour": "B2", "turns": ["my cat completely ignores me"], "expect": {"copy": 0.34}}
+{"id": "h-copy-8", "split": "held-out", "behaviour": "B2", "turns": ["my grandma is in the hospital"], "expect": {"copy": 0.34}}
+{"id": "h-copy-9", "split": "held-out", "behaviour": "B2", "turns": ["me and my friend are drifting apart"], "expect": {"copy": 0.34}}
+{"id": "h-copy-10", "split": "held-out", "behaviour": "B2", "turns": ["the bus driver drove right past me"], "expect": {"copy": 0.34}}
+{"id": "h-copy-11", "split": "held-out", "behaviour": "B2", "turns": ["my friend never paid me back the money"], "expect": {"copy": 0.34}}
+{"id": "h-copy-12", "split": "held-out", "behaviour": "B2", "turns": ["i switched to the night shift at work"], "expect": {"copy": 0.34}}
+{"id": "h-copy-13", "split": "held-out", "behaviour": "B2", "turns": ["i dropped my spanish class"], "expect": {"copy": 0.34}}
+{"id": "h-copy-14", "split": "held-out", "behaviour": "B2", "turns": ["i burned dinner again"], "expect": {"copy": 0.34}}
+{"id": "h-copy-15", "split": "held-out", "behaviour": "B2", "turns": ["i started volunteering at the animal shelter"], "expect": {"copy": 0.34}}
+{"id": "h-copy-16", "split": "held-out", "behaviour": "B2", "turns": ["im entering the science fair this year"], "expect": {"copy": 0.34}}
+{"id": "h-react-1", "split": "held-out", "behaviour": "B3", "turns": ["my dog died last week"], "expect": {"reaction": true}}
+{"id": "h-react-2", "split": "held-out", "behaviour": "B3", "turns": ["i got my first paycheck!!"], "expect": {"reaction": true}}
+{"id": "h-react-3", "split": "held-out", "behaviour": "B3", "turns": ["its our one year anniversary today"], "expect": {"reaction": true}}
+{"id": "h-react-4", "split": "held-out", "behaviour": "B3", "turns": ["i had a huge fight with my best friend"], "expect": {"reaction": true}}
+{"id": "h-detail-1", "split": "held-out", "behaviour": "B4", "turns": ["i tried a new korean food truck today"], "expect": {"any": ["food truck", "korean"]}}
+{"id": "h-detail-2", "split": "held-out", "behaviour": "B4", "turns": ["im writing a novel about a lighthouse keeper"], "expect": {"any": ["novel", "lighthouse"]}}
+{"id": "h-mixed-1", "split": "held-out", "behaviour": "B5", "turns": ["were moving in together but im kind of nervous"], "expect": {"both": [["moving", "together"], ["nervous"]]}}
+{"id": "h-mixed-2", "split": "held-out", "behaviour": "B5", "turns": ["i just got glasses but i hate how they look"], "expect": {"both": [["glasses"], ["hate", "look"]]}}
+{"id": "h-conv-1", "split": "held-out", "behaviour": "B2", "turns": ["my account got hacked", "they posted weird stuff from it", "my friends think i did it"], "check": 2, "expect": {"copy": 0.34}}
+{"id": "h-conv-2", "split": "held-out", "behaviour": "B2", "turns": ["i burned dinner again", "my roommates were really hungry", "we ended up ordering pizza"], "check": 2, "expect": {"copy": 0.34}}
+{"id": "h-conv-3", "split": "held-out", "behaviour": "B2", "turns": ["my dog died last week", "he was fourteen", "the house feels so quiet now"], "check": 2, "expect": {"copy": 0.34}}
+{"id": "h-conv-4", "split": "held-out", "behaviour": "B2", "turns": ["i asked for a raise", "my manager said she would think about it", "now im just waiting"], "check": 2, "expect": {"copy": 0.34}}
+{"id": "h-conv-5", "split": "held-out", "behaviour": "B2", "turns": ["the bus driver drove right past me", "i was standing right at the stop", "i was late for my exam"], "check": 2, "expect": {"copy": 0.34}}
+{"id": "h-conv-6", "split": "held-out", "behaviour": "B2", "turns": ["im writing a novel", "its about a girl who can talk to birds", "im stuck on chapter three"], "check": 2, "expect": {"copy": 0.34}}
+{"id": "h-mem-1", "split": "held-out", "behaviour": "B6", "turns": ["we're going on a road trip to the coast", "four of us in one car", "leaving friday", "ok", "i just hope it doesnt rain"], "check": 4, "expect": {"any": ["road trip", "trip", "coast", "car", "friday"]}}
+{"id": "h-name-1", "split": "held-out", "behaviour": "B7", "turns": ["hi", "im sam btw, my name is sam", "my ankle is killing me"], "check": 1, "expect": {"any": ["sam"]}}

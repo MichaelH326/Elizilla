@@ -1,0 +1,912 @@
+{
+ "elizilla (rules)": {
+  "hard_pct": 100.0,
+  "rows": [
+   {
+    "id": "k-copy-1",
+    "ok": true,
+    "turns": [
+     "honestly my chemistry final is freaking me out"
+    ],
+    "replies": [
+     "What's the chemistry final like?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-copy-2",
+    "ok": true,
+    "turns": [
+     "my boss keeps piling more work on me"
+    ],
+    "replies": [
+     "How do you feel about your more work?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-copy-3",
+    "ok": true,
+    "turns": [
+     "i think my roommate is mad at me"
+    ],
+    "replies": [
+     "What makes you think your roommate is mad at you?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-copy-4",
+    "ok": true,
+    "turns": [
+     "my little sister borrowed my headphones and broke them"
+    ],
+    "replies": [
+     "What's it like at home with your little sister?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-copy-5",
+    "ok": false,
+    "turns": [
+     "i cant decide whether to switch schools"
+    ],
+    "replies": [
+     "What would happen if you could can?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-copy-6",
+    "ok": true,
+    "turns": [
+     "my soccer coach never lets me play"
+    ],
+    "replies": [
+     "What's the soccer coach like?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-copy-7",
+    "ok": true,
+    "turns": [
+     "i finally finished my first painting"
+    ],
+    "replies": [
+     "What's the first painting like?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-copy-8",
+    "ok": true,
+    "turns": [
+     "my neighbors dog barks all night"
+    ],
+    "replies": [
+     "Neighbors dog barks and night at the same time is a lot. How are you juggling both?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-copy-9",
+    "ok": true,
+    "turns": [
+     "i keep forgetting to call my grandpa back"
+    ],
+    "replies": [
+     "What kind of grandpa back?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-copy-10",
+    "ok": false,
+    "turns": [
+     "my best friend found a new group of friends"
+    ],
+    "replies": [
+     "What kind of new group?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-copy-11",
+    "ok": false,
+    "turns": [
+     "our landlord is raising the rent again"
+    ],
+    "replies": [
+     "What's the landlord like?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-copy-12",
+    "ok": true,
+    "turns": [
+     "i got cut from the volleyball team"
+    ],
+    "replies": [
+     "What's the volleyball team like?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-react-1",
+    "ok": true,
+    "turns": [
+     "i feel so lonely since everyone left for college"
+    ],
+    "replies": [
+     "That doesn't sound easy at all. What does a lonely day look like for you?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-react-2",
+    "ok": false,
+    "turns": [
+     "i got into the college i wanted!!"
+    ],
+    "replies": [
+     "How are things going at your college?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-react-3",
+    "ok": true,
+    "turns": [
+     "im really sad that summer is over"
+    ],
+    "replies": [
+     "That sounds draining. What usually helps when you feel sad?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-react-4",
+    "ok": true,
+    "turns": [
+     "i passed my driving test today"
+    ],
+    "replies": [
+     "I'm so sorry. What do you miss most about you?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-detail-1",
+    "ok": true,
+    "turns": [
+     "i spent all day fixing bugs in my python script"
+    ],
+    "replies": [
+     "What kind of python script?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-detail-2",
+    "ok": false,
+    "turns": [
+     "we launched a new marketing campaign at work"
+    ],
+    "replies": [
+     "How do you feel about your work?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-mixed-1",
+    "ok": false,
+    "turns": [
+     "the trip was fun but i spent way too much money"
+    ],
+    "replies": [
+     "What kind of trip?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-mixed-2",
+    "ok": false,
+    "turns": [
+     "i love my job but my coworkers are exhausting"
+    ],
+    "replies": [
+     "What do you love most about your job?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-world-1",
+    "ok": true,
+    "turns": [
+     "how many legs does a spider have?"
+    ],
+    "replies": [
+     "What kind of many legs?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-world-2",
+    "ok": true,
+    "turns": [
+     "what year did the titanic sink?"
+    ],
+    "replies": [
+     "What kind of titanic sink?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-world-3",
+    "ok": true,
+    "turns": [
+     "whats the tallest mountain in the world?"
+    ],
+    "replies": [
+     "What's got you curious about the tallest mountain in the?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-req-1",
+    "ok": true,
+    "turns": [
+     "can you write a cover letter for me"
+    ],
+    "replies": [
+     "You want someone to write a over letter for you. What's the hardest part of it?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-req-2",
+    "ok": true,
+    "turns": [
+     "could you help me with my math homework"
+    ],
+    "replies": [
+     "You want someone to help you with your math homework. What's been getting in the way?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-bot-1",
+    "ok": false,
+    "turns": [
+     "do you have feelings?"
+    ],
+    "replies": [
+     "What's the feelings like?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-bot-2",
+    "ok": true,
+    "turns": [
+     "are you smarter than me"
+    ],
+    "replies": [
+     "We were talking about you, not me. What were you about to say?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-mem-1",
+    "ok": false,
+    "turns": [
+     "my sister is getting married in june",
+     "i have to give a speech",
+     "ive been writing it all week",
+     "anyway",
+     "its this saturday actually"
+    ],
+    "replies": [
+     "What's it like at home with your sister?",
+     "What kind of speech?",
+     "It sounds like you have been writing it all week. What else comes to mind?",
+     "Anyway. What happened next?",
+     "It sounds like it is this saturday actually. How are you feeling about it now?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-mem-2",
+    "ok": false,
+    "turns": [
+     "i started a new job at a bakery",
+     "the hours are early",
+     "like 4am early",
+     "ok",
+     "i like it though"
+    ],
+    "replies": [
+     "How do you feel about your new job?",
+     "What kind of hours?",
+     "That reminds me of when you said \"the hours are early\". How are the two connected?",
+     "If you could change one thing about this week, what would it be?",
+     "What do you like most about it?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-name-1",
+    "ok": true,
+    "turns": [
+     "hey",
+     "my name is jordan",
+     "work has been rough lately"
+    ],
+    "replies": [
+     "Hi there. How are you feeling?",
+     "Nice to meet you, Jordan. What brings you here today?",
+     "What's a typical day like at your work lately?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-name-2",
+    "ok": true,
+    "turns": [
+     "call me priya",
+     "school is a lot right now"
+    ],
+    "replies": [
+     "Nice to meet you, Priya. What brings you here today?",
+     "What's a typical day like at your school lately?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-short-1",
+    "ok": true,
+    "turns": [
+     "hi",
+     "idk",
+     "nah"
+    ],
+    "replies": [
+     "Hi there. How are you feeling?",
+     "What makes it hard to put into words?",
+     "That's okay. What was the best part of your week so far?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-short-2",
+    "ok": true,
+    "turns": [
+     "hey",
+     "meh",
+     "dunno"
+    ],
+    "replies": [
+     "Hi there. How are you feeling?",
+     "Meh. What else comes to mind?",
+     "That's okay, we'll find something. What's something you've been thinking about more than usual?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-rep-1",
+    "ok": true,
+    "turns": [
+     "my brother keeps reading my texts",
+     "it really bugs me",
+     "my brother keeps reading my texts"
+    ],
+    "replies": [
+     "What's it like when your brother keeps reading your tests?",
+     "What kind of bugs?",
+     "That's the second time you've said that. What's behind it?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-why-1",
+    "ok": true,
+    "turns": [
+     "my job is stressing me out",
+     "why?"
+    ],
+    "replies": [
+     "What's the hardest part of your job lately?",
+     "Mostly because of what you said: \"my job is stressing me out\". How important does that feel to you?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "k-clar-1",
+    "ok": false,
+    "turns": [
+     "my week was weird",
+     "what do you mean"
+    ],
+    "replies": [
+     "Your week was weird. What else comes to mind?",
+     "What's the hardest part about it now?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-1",
+    "ok": false,
+    "turns": [
+     "a customer yelled at me today for no reason"
+    ],
+    "replies": [
+     "How did it start?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-2",
+    "ok": false,
+    "turns": [
+     "the heater in my apartment broke and its freezing"
+    ],
+    "replies": [
+     "What kind of heater?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-3",
+    "ok": false,
+    "turns": [
+     "i missed my train this morning and was late"
+    ],
+    "replies": [
+     "What kind of train?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-4",
+    "ok": false,
+    "turns": [
+     "i sprained my ankle playing soccer"
+    ],
+    "replies": [
+     "What kind of ankle?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-5",
+    "ok": false,
+    "turns": [
+     "my account got hacked last night"
+    ],
+    "replies": [
+     "What kind of account?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-6",
+    "ok": false,
+    "turns": [
+     "i finally built my own computer"
+    ],
+    "replies": [
+     "What's it like talking to a program?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-7",
+    "ok": false,
+    "turns": [
+     "my cat completely ignores me"
+    ],
+    "replies": [
+     "How long have you had your cat?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-8",
+    "ok": true,
+    "turns": [
+     "my grandma is in the hospital"
+    ],
+    "replies": [
+     "How do you and your grandma usually get along?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-9",
+    "ok": false,
+    "turns": [
+     "me and my friend are drifting apart"
+    ],
+    "replies": [
+     "What kind of apart?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-10",
+    "ok": true,
+    "turns": [
+     "the bus driver drove right past me"
+    ],
+    "replies": [
+     "What kind of bus driver?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-11",
+    "ok": false,
+    "turns": [
+     "my friend never paid me back the money"
+    ],
+    "replies": [
+     "How are you juggling both?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-12",
+    "ok": true,
+    "turns": [
+     "i switched to the night shift at work"
+    ],
+    "replies": [
+     "How are things going at your night shift?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-13",
+    "ok": true,
+    "turns": [
+     "i dropped my spanish class"
+    ],
+    "replies": [
+     "What's a typical day like at your spanish class lately?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-14",
+    "ok": false,
+    "turns": [
+     "i burned dinner again"
+    ],
+    "replies": [
+     "What kind of dinner?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-15",
+    "ok": true,
+    "turns": [
+     "i started volunteering at the animal shelter"
+    ],
+    "replies": [
+     "What kind of animal shelter?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-copy-16",
+    "ok": false,
+    "turns": [
+     "im entering the science fair this year"
+    ],
+    "replies": [
+     "What's the fair like?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-react-1",
+    "ok": true,
+    "turns": [
+     "my dog died last week"
+    ],
+    "replies": [
+     "That's a real loss. What do you miss most about your dog?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-react-2",
+    "ok": true,
+    "turns": [
+     "i got my first paycheck!!"
+    ],
+    "replies": [
+     "It sounds like you got your first paycheck. What else comes to mind?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-react-3",
+    "ok": true,
+    "turns": [
+     "its our one year anniversary today"
+    ],
+    "replies": [
+     "It sounds like it is your one year anniversary today. What else comes to mind?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-react-4",
+    "ok": false,
+    "turns": [
+     "i had a huge fight with my best friend"
+    ],
+    "replies": [
+     "What kind of huge?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-detail-1",
+    "ok": true,
+    "turns": [
+     "i tried a new korean food truck today"
+    ],
+    "replies": [
+     "It sounds like you tried a new korean food truck today. How are you feeling about it now?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-detail-2",
+    "ok": true,
+    "turns": [
+     "im writing a novel about a lighthouse keeper"
+    ],
+    "replies": [
+     "What kind of lighthouse keeper?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-mixed-1",
+    "ok": false,
+    "turns": [
+     "were moving in together but im kind of nervous"
+    ],
+    "replies": [
+     "What kind of together?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-mixed-2",
+    "ok": false,
+    "turns": [
+     "i just got glasses but i hate how they look"
+    ],
+    "replies": [
+     "That sounds draining. What's been the hardest part of your classes right now?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-conv-1",
+    "ok": true,
+    "turns": [
+     "my account got hacked",
+     "they posted weird stuff from it",
+     "my friends think i did it"
+    ],
+    "replies": [
+     "What kind of account?",
+     "What kind of weird stuff?",
+     "What do you like most about your friends?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-conv-2",
+    "ok": true,
+    "turns": [
+     "i burned dinner again",
+     "my roommates were really hungry",
+     "we ended up ordering pizza"
+    ],
+    "replies": [
+     "What's the dinner like?",
+     "What kind of roommates?",
+     "What kind of up ordering pizza?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-conv-3",
+    "ok": false,
+    "turns": [
+     "my dog died last week",
+     "he was fourteen",
+     "the house feels so quiet now"
+    ],
+    "replies": [
+     "I'm sorry. What has the last little while been like for you?",
+     "He was fourteen. How long has it been like for you?",
+     "What else comes to mind?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-conv-4",
+    "ok": false,
+    "turns": [
+     "i asked for a raise",
+     "my manager said she would think about it",
+     "now im just waiting"
+    ],
+    "replies": [
+     "What kind of raise?",
+     "How are things with your manager?",
+     "What else comes to mind?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-conv-5",
+    "ok": true,
+    "turns": [
+     "the bus driver drove right past me",
+     "i was standing right at the stop",
+     "i was late for my exam"
+    ],
+    "replies": [
+     "What's the bus driver like?",
+     "It sounds like you were standing right at the stop. How did that feel?",
+     "What's the hardest part of the exam?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-conv-6",
+    "ok": false,
+    "turns": [
+     "im writing a novel",
+     "its about a girl who can talk to birds",
+     "im stuck on chapter three"
+    ],
+    "replies": [
+     "What's the novel like?",
+     "What kind of birds?",
+     "When did you start feeling stuck about it?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-mem-1",
+    "ok": false,
+    "turns": [
+     "we're going on a road trip to the coast",
+     "four of us in one car",
+     "leaving friday",
+     "ok",
+     "i just hope it doesnt rain"
+    ],
+    "replies": [
+     "What kind of road trip?",
+     "Which one needs more of your energy right now, four or one car?",
+     "Leaving friday. What else comes to mind?",
+     "Who have you been spending the most time with lately?",
+     "Why do you hope it?"
+    ],
+    "problems": []
+   },
+   {
+    "id": "h-name-1",
+    "ok": true,
+    "turns": [
+     "hi",
+     "im sam btw, my name is sam",
+     "my ankle is killing me"
+    ],
+    "replies": [
+     "Hi there. How are you feeling?",
+     "Nice to meet you, Sam. What brings you here today?",
+     "What's the ankle like?"
+    ],
+    "problems": []
+   }
+  ],
+  "by_behaviour": {
+   "B2/known": [
+    9,
+    12
+   ],
+   "B2/held-out": [
+    8,
+    22
+   ],
+   "B3/known": [
+    3,
+    4
+   ],
+   "B3/held-out": [
+    3,
+    4
+   ],
+   "B4/known": [
+    1,
+    2
+   ],
+   "B4/held-out": [
+    2,
+    2
+   ],
+   "B5/known": [
+    0,
+    2
+   ],
+   "B5/held-out": [
+    0,
+    2
+   ],
+   "B6/known": [
+    0,
+    2
+   ],
+   "B6/held-out": [
+    0,
+    1
+   ],
+   "B7/known": [
+    2,
+    2
+   ],
+   "B7/held-out": [
+    1,
+    1
+   ],
+   "B8/known": [
+    2,
+    2
+   ],
+   "B9/known": [
+    1,
+    1
+   ],
+   "B10/known": [
+    1,
+    2
+   ],
+   "B11/known": [
+    3,
+    3
+   ],
+   "B12/known": [
+    2,
+    2
+   ],
+   "B14/known": [
+    1,
+    2
+   ]
+  },
+  "known": [
+   25,
+   36
+  ],
+  "held_out": [
+   14,
+   32
+  ],
+  "adapt": 0.63
+ }
+}

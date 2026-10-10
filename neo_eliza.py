@@ -364,8 +364,8 @@ NO_PRESSURE = ["That's okay, we'll find something.", "No problem, I'll pick some
                "That's fine, let me ask you something else."]
 QUESTION = ["What do you think?", "What got you wondering about that?",
             "What answer would help you most?"]
-DETAIL_Q = ["What kind of {d}?", "What goes into the {d}?", "How do you feel about the {d}?",
-            "What's the most interesting part of the {d}?"]
+DETAIL_Q = ["What kind of {d}?", "What happened with the {d}?", "How do you feel about the {d}?",
+            "What's going on with the {d}?"]
 REPEATED = ["You said that a moment ago, so it seems important. What makes it stand out for you?",
             "That's the second time you've said that. What's behind it?"]
 EMPATHY_PREFIX = {"low": ["That sounds really hard. ", "I'm sorry. ", ""],

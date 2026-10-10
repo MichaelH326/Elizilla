@@ -132,8 +132,6 @@ i-am: how long have you been <rest> ?
 detail: what kind of <d> ?
 detail: what's the <d> like ?
 detail: how do you feel about the <d> ?
-detail: what got you into the <d> ?
-detail: what's the best part of the <d> ?
 mixed: so <before> , but <clause> . how are you holding both of those ?
 mixed: it sounds like there's a good part and a hard part . how are you balancing them ?
 worry: what's the worry that keeps coming back ?
@@ -441,9 +439,9 @@ sorry: no need to apologize here . what made you feel you should ?
 detail: what kind of <d> ?
 detail: what's the <d> like ?
 detail: how are you feeling about the <d> ?
-detail: what's the hardest part of the <d> ?
-detail: what's the best part of the <d> ?
 detail: how did the <d> come up ?
+detail: what happened with the <d> ?
+detail: what's going on with the <d> ?
 open: what else comes to mind ?
 open: how did that feel ?
 open: what happened next ?
