@@ -1,6 +1,16 @@
 # Elizilla
 
-NeoEliza, the listening chatbot behind Elizilla. See [PLAN.md](PLAN.md) for the roadmap.
+NeoEliza, the chatbot behind Elizilla. See [PLAN.md](PLAN.md) for the roadmap.
+
+**What this is:** an experiment to see whether a small language model (SLM),
+with no API, no GPU and no installs, can have and hold a conversation with a
+person. It keeps the person talking by reflecting what they say and asking
+open-ended questions.
+
+**What this isn't:** a therapist, a counsellor, a support service, or a
+source of advice. It doesn't understand people the way a person does, and
+it shouldn't be used as if it did. The crisis handling below is there only
+because anyone might type something serious into a chat box.
 
 An ELIZA-style chatbot in pure Python (no dependencies). Instead of matching
 fixed text patterns, it breaks every sentence into **sections** and labels every
@@ -27,7 +37,8 @@ Type `/memory` in the chat to see what it remembers, `quit` to leave.
 
 ## Crisis safety
 
-Any message about suicide, self-harm or harming others skips everything else.
+Elizilla is a conversation experiment, not a support tool, so it never tries
+to handle a crisis itself. Any message about suicide, self-harm or harming others skips everything else.
 Elizilla answers with the route crisis professionals advise: it says it cares,
 points to a real person right away (988 call or text, Crisis Text Line at
 741741, 911 or the emergency room if anyone is in danger, findahelpline.com

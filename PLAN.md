@@ -1,8 +1,12 @@
 # Elizilla Plan
 
-Goal: an ELIZA-style listener that holds a real conversation, keeps the person
-talking with open-ended questions, and runs anywhere Python runs: no API, no
-installs, no GPU. It only listens and talks. It doesn't do tasks.
+Goal: find out whether a small language model can have and hold a real
+conversation with a person: an ELIZA-style listener that keeps the person
+talking with open-ended questions and runs anywhere Python runs (no API, no
+installs, no GPU). It only listens and talks. It doesn't do tasks.
+
+Elizilla is a research tool, not a therapist or a support service, and
+nothing on this roadmap changes that.
 
 ## Where it stands (October 2026)
 
@@ -64,6 +68,7 @@ GGUF `.mdlo`, like Mira, that runs without Elizilla's code. Full plan, with
 gates, risks and decisions: [NEURAL_PLAN.md](NEURAL_PLAN.md).
 
 ## Principles
+- A conversation experiment, never a therapist, counsellor or advice source.
 - Pure Python standard library only.
 - Every reply ends with an open-ended question.
 - The hand-written templates stay as the fallback, so quality never drops below today's.

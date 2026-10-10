@@ -4,6 +4,10 @@ Goal: a single `elizilla.mdlo` (MDLO v2, `"engine": "gguf"`) that listens the
 way Elizilla does and runs in any GGUF runtime (Mira's `run_mira.py`,
 llama.cpp, Ollama, LM Studio) with **none of Elizilla's Python code**.
 
+The research question stays the same: can a small model have and hold a
+conversation? The neural version is a second way of answering it, not a step
+towards a therapy or support product.
+
 How: use today's rule-based Elizilla as a **teacher**. It writes thousands of
 example conversations, a small open model is fine-tuned on them with Mira's
 existing pipeline, and the result is packaged the same way `mira.mdlo` is.

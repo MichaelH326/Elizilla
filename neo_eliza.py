@@ -2,6 +2,9 @@
 """
 NeoEliza - an ELIZA-style chatbot driven by sentence sections and word categories.
 
+An experiment in whether a small language model can have and hold a
+conversation. It is not a therapist, counsellor, or source of advice.
+
 Pipeline for every message:
   1. normalize    contractions, slang, spelling correction        (sentence.py)
   2. tag          each word gets a part of speech + category      (lexicon.py)
@@ -718,6 +721,8 @@ def main():
         if mdlo.is_stale(bot.model_header):
             print("(note: corpus.txt or rules.py changed since this model was packed; "
                   "run `python3 mdlo.py pack` to rebuild it)")
+    print("(Elizilla is an experiment in whether a small language model can hold a conversation.")
+    print(" It isn't a therapist or a source of advice.)\n")
     print("NeoEliza: Hello, I'm NeoEliza. How are you feeling today?")
     print("          (type 'quit' to leave, '/memory' to see what I remember)\n")
     while True:
