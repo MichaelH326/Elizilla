@@ -90,6 +90,7 @@ def main():
     p.add_argument("--card", required=True)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--min-unique", type=float, default=15.0)
+    p.add_argument("--max-reply-pct", type=float, default=2.0)
     args = p.parse_args()
     rng = random.Random(args.seed)
 
@@ -145,6 +146,12 @@ def main():
     if unique_pct < args.min_unique:
         failures.append(f"only {unique_pct:.1f}% unique replies (need {args.min_unique}%)")
 
+    # 2b. no single reply may dominate (the model would learn it by heart)
+    top_reply, top_n = Counter(replies).most_common(1)[0] if replies else ("", 0)
+    top_pct = 100 * top_n / max(len(replies), 1)
+    if top_pct > args.max_reply_pct:
+        failures.append(f"one reply is {top_pct:.1f}% of all turns (max {args.max_reply_pct}%): {top_reply!r}")
+
     # 3. behaviour coverage and teacher share
     beh = Counter(b for c in convs for b in c["behaviours"])
     low = {b: round(100 * beh[b] / max(len(convs), 1), 1) for b in SCHEDULE
@@ -159,6 +166,7 @@ def main():
     card = {
         "conversations_in": start, "conversations_out": len(convs),
         "turns": len(replies), "unique_reply_pct": round(unique_pct, 1),
+        "most_common_replies": Counter(replies).most_common(15),
         "areas": Counter(c["area"] for c in convs), "situations": len({c["situation"] for c in convs}),
         "behaviours_pct": {b: round(100 * beh[b] / max(len(convs), 1), 1) for b in SCHEDULE},
         "turn_sources_pct": {k: round(100 * v / max(sum(sources.values()), 1), 1) for k, v in sources.items()},

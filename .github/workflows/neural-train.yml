@@ -9,6 +9,12 @@ name: Train neural Elizilla
 on:
   workflow_dispatch:
     inputs:
+      profiles_run_id:
+        description: "Reuse the profiles from this earlier run (skips writing new ones); blank = write new"
+        default: ""
+      max_uses:
+        description: "Rewrite a reply once it has been used this often in a shard (0 = off)"
+        default: "4"
       teacher:
         description: "Teacher for profiles and weak turns (none = templates and Elizilla only)"
         type: choice
@@ -41,6 +47,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 env:
   PYTHONUNBUFFERED: "1"
@@ -81,6 +88,7 @@ jobs:
 
   profiles:
     needs: [setup, teacher]
+    if: inputs.profiles_run_id == ''
     runs-on: ubuntu-latest
     timeout-minutes: 350
     strategy:
@@ -109,6 +117,7 @@ jobs:
 
   build:
     needs: [setup, profiles]
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 350
     strategy:
@@ -127,7 +136,12 @@ jobs:
           path: models
           key: teacher-${{ inputs.teacher }}
       - uses: actions/download-artifact@v4
-        with: {pattern: "profiles-*", merge-multiple: true, path: parts}
+        with:
+          pattern: "profiles-*"
+          merge-multiple: true
+          path: parts
+          run-id: ${{ inputs.profiles_run_id || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Simulate and build
         run: |
           cat $(ls parts/profiles-*.jsonl | sort -V) > profiles.jsonl
@@ -135,12 +149,13 @@ jobs:
           T=none
           if [ "${{ inputs.teacher }}" != "none" ]; then T=$(python neural/get_teacher.py ${{ inputs.teacher }} --out models | tail -1); fi
           python neural/build.py people.jsonl --teacher "$T" --shard ${{ matrix.shard }} \
-            --shards ${{ needs.setup.outputs.n }} --out built-${{ matrix.shard }}.jsonl
+            --shards ${{ needs.setup.outputs.n }} --max-uses ${{ inputs.max_uses }} --out built-${{ matrix.shard }}.jsonl
       - uses: actions/upload-artifact@v4
         with: {name: "built-${{ matrix.shard }}", path: "built-${{ matrix.shard }}.jsonl"}
 
   dataset:
     needs: build
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -161,6 +176,7 @@ jobs:
 
   train:
     needs: dataset
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 350
     steps:
