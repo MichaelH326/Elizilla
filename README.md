@@ -18,6 +18,7 @@ guess at facts, and says it can't do tasks.
 python3 neo_eliza.py           # chat
 python3 neo_eliza.py --debug   # show word tags, sections, the winning rule, and where the wording came from
 python3 neo_eliza.py --no-slm  # hand-written templates only
+python3 neo_eliza.py --model elizilla.mdlo   # load the packed model instead of training at startup
 ```
 
 Type `/memory` in the chat to see what it remembers, `quit` to leave.
@@ -46,6 +47,7 @@ SLM:   "What's been eating up the time you'd need to do your homework?"
 | `rules.py` | Rules written as sections + categories, plus a few fixed idioms ("what's on your mind") |
 | `neo_eliza.py` | Scoring, mood, memory, dialogue handling, and the chat loop |
 | `slm.py`, `corpus.txt` | Small language model (4-gram, Kneser-Ney) that writes each reply from the rule's plan, with grammar and confidence gates. Try it alone: `python3 slm.py sample sad describer=lonely` |
+| `mdlo.py`, `elizilla.mdlo` | Packs the trained SLM into one `.mdlo` file, the same container Mira uses, and loads it back |
 | `eval_slm.py` | Measures the SLM per intent (% written, % new wording, % copies) and writes a sheet for rating replies by hand |
 
 ## Writing a rule
@@ -102,10 +104,41 @@ in front when the rule's mood matches the person's mood.
 python3 eval_slm.py        # per-intent report + eval_slm_sheet.tsv
 ```
 
+## The .mdlo file
+
+`elizilla.mdlo` is the trained SLM in one file, in the same container as
+[Mira's](https://github.com/MichaelH326/Mira/blob/main/MDLO_SPEC.md) `mira.mdlo`:
+
+| Offset | Size | Field |
+|---|---|---|
+| 0 | 4 | magic `MDLO` |
+| 4 | 4 | version, uint32 little-endian: `2` |
+| 8 | 8 | header length, uint64 little-endian |
+| 16 | header length | JSON header |
+| after the header | rest of file | payload, checked against `payload_sha256` |
+
+The header has the same fields as Mira's v2 header (`format`, `format_version`,
+`model_name`, `engine`, `payload_sha256`, `payload_bytes`, `chat`, `provenance`).
+The difference is the engine: Mira's payload is a GGUF neural network
+(`"engine": "gguf"`). Elizilla's is the n-gram model as gzipped JSON
+(`"engine": "ngram-kn"`), so reading it needs nothing but Python.
+`chat.system_prompt` describes the persona the rules and corpus were written
+for, and `chat` holds the generation settings the model loads with.
+
+```bash
+python3 mdlo.py pack                  # rebuild elizilla.mdlo (do this after editing corpus.txt or rules.py)
+python3 mdlo.py info elizilla.mdlo    # print the header
+```
+
+`provenance.training_sha256` records which `corpus.txt` and `rules.py` the
+file was built from. The chat warns when the file is out of date, and
+`test_mdlo.py` fails until you repack.
+
 ## Tests
 
 ```bash
 python3 test_sections.py        # sentences split into the right sections
 python3 test_open_questions.py  # every reply ends with an open-ended question
 python3 test_slm.py             # SLM gates, generated replies, honesty replies
+python3 test_mdlo.py            # .mdlo layout, checksum, round trip, and that elizilla.mdlo is up to date
 ```

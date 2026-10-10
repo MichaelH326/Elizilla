@@ -28,6 +28,7 @@ from collections import Counter, defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BOS, EOS = "<s>", "</s>"
+SEP = "\x1f"                     # joins a word history into one JSON key
 SLOT_RX = re.compile(r"<(\w+)>")
 CLOSED_START = re.compile(r"^(?:do|does|did|is|are|was|were|have|has|can|could|would|will|should|am)\b", re.I)
 
@@ -64,6 +65,20 @@ class KNModel:
         self.d = discount
         self.counts = [defaultdict(Counter) for _ in range(order)]   # [n][history][word]
         self.vocab = set()
+
+    def state(self):
+        """Trained counts as plain JSON-ready data (for the .mdlo file)."""
+        return {"order": self.order, "discount": self.d, "vocab": sorted(self.vocab),
+                "counts": [{SEP.join(h): dict(nxt) for h, nxt in table.items()} for table in self.counts]}
+
+    @classmethod
+    def from_state(cls, st):
+        m = cls(st["order"], st["discount"])
+        m.vocab = set(st["vocab"])
+        for k, table in enumerate(st["counts"]):
+            for h, nxt in table.items():
+                m.counts[k][tuple(h.split(SEP)) if h else ()] = Counter(nxt)
+        return m
 
     def train(self, sentences):
         n = self.order
@@ -255,12 +270,19 @@ class SLM:
     template instead.
     """
 
-    def __init__(self, order=4, mix=0.7, samples=40, splice=0.35, frame_len=4,
-                 min_confidence=-1.5, min_word_confidence=-2.4, seed=None):
+    SETTINGS = ("order", "mix", "samples", "splice", "frame_len", "temperature",
+                "min_confidence", "min_word_confidence")
+
+    def __init__(self, order=4, mix=0.7, samples=40, splice=0.35, frame_len=4, temperature=0.8,
+                 min_confidence=-1.5, min_word_confidence=-2.4, seed=None, state=None):
         self.order, self.mix, self.samples, self.frame_len = order, mix, samples, frame_len
+        self.temperature = temperature
         self.splice, self.min_confidence = splice, min_confidence
         self.min_word_confidence = min_word_confidence
         self.rng = random.Random(seed)
+        if state is not None:
+            self._load(state)
+            return
         data = load_corpus()
         for intent, sents in rule_templates().items():
             data[intent].extend(sents)
@@ -275,6 +297,30 @@ class SLM:
                     self.endings.add(tuple(s[i - 3:i]))
         self.global_model = KNModel(order).train(everything)
         self.intent_models = {i: KNModel(order).train(s) for i, s in data.items() if len(s) >= 3}
+        self.intent_slots = {i: sorted({m for s in sents for m in SLOT_RX.findall(" ".join(s))})
+                             for i, sents in data.items()}
+
+    # --- saving and loading (see mdlo.py) ---
+    def state(self):
+        """Everything needed to write replies, without the training corpus."""
+        return {
+            "settings": {k: getattr(self, k) for k in self.SETTINGS},
+            "global_model": self.global_model.state(),
+            "intent_models": {i: m.state() for i, m in sorted(self.intent_models.items())},
+            "intent_slots": self.intent_slots,
+            "seen_sentences": sorted(self.seen_sentences),
+            "endings": sorted(SEP.join(e) for e in self.endings),
+        }
+
+    def _load(self, st):
+        for k, v in st["settings"].items():
+            setattr(self, k, v)
+        self.data = None                             # a loaded model carries no corpus
+        self.global_model = KNModel.from_state(st["global_model"])
+        self.intent_models = {i: KNModel.from_state(m) for i, m in st["intent_models"].items()}
+        self.intent_slots = st["intent_slots"]
+        self.seen_sentences = set(st["seen_sentences"])
+        self.endings = {tuple(e.split(SEP)) for e in st["endings"]}
 
     # --- scoring ---
     def logprob(self, intent, toks, weakest=False):
@@ -298,7 +344,7 @@ class SLM:
         return {w: c for w, c in (t or {}).items()
                 if not ((m := SLOT_RX.fullmatch(w)) and m.group(1) not in allowed)}
 
-    def _sample_one(self, intent, allowed, max_len=30, temperature=0.8):
+    def _sample_one(self, intent, allowed, max_len=30):
         """Walk the chain using only word sequences seen in training. Most
         steps follow a known 4-gram; with probability `splice` a step uses
         only the last two words, which lets the walk jump into a different
@@ -329,7 +375,7 @@ class SLM:
             if not table:
                 return None, splices
             words = list(table)
-            w = self.rng.choices(words, [table[x] ** (1 / temperature) for x in words])[0]
+            w = self.rng.choices(words, [table[x] ** (1 / self.temperature) for x in words])[0]
             if table is not full and w not in (joined_from or ()):
                 splices.append(len(out))             # this word starts a different reply
             if w == EOS:
@@ -426,10 +472,9 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     slm = SLM()
     if not args or args[0] == "stats":
-        n = sum(len(s) for s in slm.data.values())
-        print(f"training sentences: {n}")
-        print(f"intents: {len(slm.data)}  vocabulary: {len(slm.global_model.vocab)} words")
-        print(f"trigram histories: {len(slm.global_model.counts[2])}")
+        print(f"training sentences: {len(slm.seen_sentences)} distinct")
+        print(f"intents: {len(slm.intent_slots)}  vocabulary: {len(slm.global_model.vocab)} words")
+        print(f"word histories: {sum(len(t) for t in slm.global_model.counts)}")
     elif args[0] == "sample":
         intent = args[1] if len(args) > 1 else "open"
         slots = dict(a.split("=", 1) for a in args[2:])

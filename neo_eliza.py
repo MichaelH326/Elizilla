@@ -21,7 +21,8 @@ Like Mira, it is honest about its limits: it says it can't know the time,
 weather or news, doesn't guess at facts, and says it can't do tasks.
 
 Run with --debug to see the sections, the winning rule, and where each reply
-came from. Run with --no-slm to use only the hand-written templates.
+came from. Run with --no-slm to use only the hand-written templates, or with
+--model elizilla.mdlo to load a packed model (see mdlo.py).
 """
 
 import math
@@ -34,6 +35,7 @@ from lexicon import WORD_TO_CLASS, gerund
 from rules import RULES, PHRASES
 from sentence import normalize, parse, main_frame, reflect
 from slm import SLM
+import mdlo
 
 # ---------------------------------------------------------------------------
 # Emotion model
@@ -364,9 +366,15 @@ CLOSED_QUESTION = re.compile(
 # ---------------------------------------------------------------------------
 
 class NeoEliza:
-    def __init__(self, seed=None, debug=False, use_slm=True):
+    def __init__(self, seed=None, debug=False, use_slm=True, model=None):
+        """model: path to an .mdlo file. Without one, the SLM trains from
+        corpus.txt and rules.py at startup (about 0.05 seconds)."""
         self.rng = random.Random(seed)
-        self.writer = SLM(seed=seed) if use_slm else None
+        self.model_header = None
+        if model and use_slm:
+            self.writer, self.model_header = mdlo.load(model, seed=seed)
+        else:
+            self.writer = SLM(seed=seed) if use_slm else None
         self.last_source = None
         self.emotion = EmotionModel()
         self.memory = Memory()
@@ -663,7 +671,14 @@ class NeoEliza:
 
 def main():
     debug = "--debug" in sys.argv
-    bot = NeoEliza(debug=debug, use_slm="--no-slm" not in sys.argv)
+    model = sys.argv[sys.argv.index("--model") + 1] if "--model" in sys.argv[:-1] else None
+    bot = NeoEliza(debug=debug, use_slm="--no-slm" not in sys.argv, model=model)
+    if bot.model_header:
+        p = bot.model_header["provenance"]
+        print(f"(model: {model}, {p['training_sentences']} training sentences, {p['intents']} intents)")
+        if mdlo.is_stale(bot.model_header):
+            print("(note: corpus.txt or rules.py changed since this model was packed; "
+                  "run `python3 mdlo.py pack` to rebuild it)")
     print("NeoEliza: Hello, I'm NeoEliza. How are you feeling today?")
     print("          (type 'quit' to leave, '/memory' to see what I remember)\n")
     while True:

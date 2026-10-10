@@ -19,7 +19,7 @@ import re
 import sys
 from collections import Counter
 
-from slm import SLM, SLOT_RX
+from slm import SLM
 
 SAMPLE_SLOTS = {
     "describer": "lonely", "follow": "finish the project", "who": "your mom",
@@ -52,9 +52,7 @@ INTENT_SLOTS = {
 
 def slots_for(slm, intent):
     """Give the writer the slots that this intent's own replies use."""
-    used = set()
-    for s in slm.data[intent]:
-        used |= set(SLOT_RX.findall(" ".join(s)))
+    used = set(slm.intent_slots.get(intent, ()))
     sample = {**SAMPLE_SLOTS, **INTENT_SLOTS.get(intent, {})}
     return {k: sample[k] for k in used if k in sample}
 
