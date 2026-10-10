@@ -1,0 +1,55 @@
+name: Release a neural Elizilla model
+
+# Publishes the elizilla-neural.mdlo (and its eval report) from an earlier
+# neural-train run as a GitHub Release, so it can be downloaded directly.
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Run id of the neural-train run that built the model"
+        required: true
+      tag:
+        description: "Release tag"
+        required: true
+      notes:
+        description: "Release notes"
+        default: ""
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: elizilla-neural
+          path: model
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Check the file before publishing
+        run: |
+          ls -lh model
+          python3 - <<'PY'
+          import json, struct, hashlib
+          with open("model/elizilla-neural.mdlo", "rb") as fh:
+              head = fh.read(16)
+              assert head[:4] == b"MDLO" and struct.unpack("<I", head[4:8])[0] == 2
+              header = json.loads(fh.read(struct.unpack("<Q", head[8:16])[0]))
+              h = hashlib.sha256()
+              while chunk := fh.read(1 << 20):
+                  h.update(chunk)
+          assert h.hexdigest() == header["payload_sha256"], "checksum mismatch"
+          assert header["safety"]["crisis_lock"] is True, "crisis lock not declared"
+          print(json.dumps({k: header[k] for k in ("model_name", "engine", "payload_bytes", "safety")}, indent=1))
+          PY
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ inputs.tag }}" model/elizilla-neural.mdlo model/report.json \
+            --title "Neural Elizilla ${{ inputs.tag }}" --notes "${{ inputs.notes }}"
