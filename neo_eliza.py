@@ -552,10 +552,12 @@ class NeoEliza:
             print(f"  mood={self.emotion.label} v={self.emotion.valence:+.2f}")
 
         if not toks:
+            self.last_rule = "empty"
             return self._say(self.pick(OPEN), raw)
 
         for k, v in new_facts:
             if k == "name":
+                self.last_rule = "name"
                 return self._say(f"Nice to meet you, {v.capitalize()}. What brings you here today?", raw)
 
         # Questions about the world and requests: reflect them back.
@@ -572,8 +574,10 @@ class NeoEliza:
         # Dialogue acts
         if (toks in (["what", "do", "you", "mean"], ["huh"], ["what"])
                 or sent.startswith(("i do not understand", "i am confused", "what are you talking about"))) and self.last_bot:
+            self.last_rule = "clarify"
             return self._say(self.write("clarify", CLARIFY), raw, keep_last=True)
         if toks in (["why"], ["why", "do", "you", "ask"]) and self.last_user:
+            self.last_rule = "why"
             return self._say(self.pick(WHY_FOLLOWUP, {"prev": self.last_user}), raw, keep_last=True)
 
         content = [t for t in toks if t not in FILLER_WORDS]
@@ -583,14 +587,18 @@ class NeoEliza:
             self.short_streak = self.short_streak + 1 if len(content) <= 1 and len(toks) <= 3 else 0
         if self.short_streak >= 2:
             self.short_streak = 0
+            self.last_rule = "short-answers"
             return self._say(self.pick(NO_PRESSURE) + " " + self.next_starter(), raw)
         if toks[0] in ("yes", "yeah", "yep", "sure") and len(toks) <= 2:
+            self.last_rule = "yes"
             return self._say(self.pick(YES) + " " + self.pick(OPEN), raw)
         if toks[0] in ("no", "nope", "nah") and len(toks) <= 2:
+            self.last_rule = "no"
             return self._say(self.pick(NO) + " " + self.next_starter(), raw)
 
         if sum(1 for prev, _ in self.memory.history[:-1] if prev == sent) and len(toks) > 3:
             self._mark_seen(frames)
+            self.last_rule = "repeated"
             return self._say(self.pick(REPEATED), raw)
 
         cands = self.candidates(sent, frames)
@@ -634,10 +642,12 @@ class NeoEliza:
             if self.turn - t >= 4 and key in MEMORY_CALLBACKS and content & fact_words:
                 self.memory.pending.remove(item)
                 args = tuple(reflect(a) for a in (val if isinstance(val, tuple) else (val,)))
+                self.last_rule = "memory"
                 return self.rng.choice(MEMORY_CALLBACKS[key]).format(*args)
 
         prev, sim = self.memory.most_similar(toks)
         if prev and prev != " ".join(words) and len(content) >= 3 and sim > 0.45 and roll < 0.5:
+            self.last_rule = "memory"
             return f"That reminds me of when you said \"{reflect(prev)}\". How are the two connected?"
 
         # Reflective listening: mirror, acknowledge the feeling, then ask.

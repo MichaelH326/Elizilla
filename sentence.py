@@ -12,6 +12,7 @@ Rules (rules.py) match on these sections instead of on raw text patterns.
 """
 
 import re
+from functools import lru_cache
 
 from lexicon import (Word, lookup, gerund, NOUNS, WORD_TO_CLASS, all_words,
                      PRONOUNS)
@@ -85,6 +86,7 @@ def _edit_distance(a, b, limit):
     return rows[-1][-1]
 
 
+@lru_cache(maxsize=None)
 def correct_spelling(word):
     if len(word) < 5 or word in VOCAB or not word.isalpha():
         return word

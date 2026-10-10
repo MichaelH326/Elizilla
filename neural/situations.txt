@@ -1,0 +1,226 @@
+# Situation map for the neural Elizilla's training data and eval.
+#
+# One situation per line:   id | what happened (first person) | what it's about | mood
+#   - "what happened" is how a person might first say it
+#   - "what it's about" is the thing itself, as the person would name it
+#   - mood is one of: anxious sad angry happy tired lonely bored proud guilty
+#     confused excited nervous frustrated calm mixed
+# Areas start with "## ". About 15% of situations are held out of training
+# (picked by situations.py from the id, so the split never changes).
+# Nothing here is about suicide, self-harm, abuse or violence: that is
+# safety.py's job, never the model's.
+
+## school
+exam-tomorrow | i have a chemistry exam tomorrow | my chemistry exam | anxious
+failed-test | i failed my math test | my math test | sad
+group-project | my group project partners arent doing anything | my group project | frustrated
+unfair-teacher | my teacher graded my essay really unfairly | my essay grade | angry
+new-school | i just started at a new school | my new school | nervous
+graduation | i graduate next week | graduation | excited
+homework-pile | i have so much homework this week | my homework | tired
+college-apps | i keep putting off my college applications | my college applications | anxious
+presentation | i have to give a presentation in class | my presentation | nervous
+good-grade | i got an a on my history paper | my history paper | proud
+detention | i got detention for being late again | detention | frustrated
+choosing-major | i cant decide what to major in | choosing a major | confused
+science-fair | im entering the science fair | the science fair | excited
+study-group | i started a study group with some classmates | my study group | happy
+dropped-class | i dropped my spanish class | my spanish class | mixed
+lost-notes | i lost all my notes before the final | my notes | anxious
+school-play | i got a part in the school play | the school play | excited
+summer-school | i have to do summer school | summer school | sad
+skipped-class | i skipped class today | skipping class | guilty
+teacher-praise | my teacher said my project was the best in the class | my project | proud
+
+## work
+new-job | i start a new job on monday | my new job | nervous
+boss-criticism | my boss criticized my work in front of everyone | my boss | angry
+promotion | i got promoted today | my promotion | proud
+long-hours | ive been working twelve hour shifts | my shifts | tired
+coworker-credit | my coworker took credit for my idea | my coworker | angry
+job-interview | i have a job interview on thursday | my job interview | nervous
+got-rejected | i didnt get the job i interviewed for | the job | sad
+quit-job | im thinking about quitting my job | quitting my job | confused
+remote-work | ive been working from home for months | working from home | lonely
+first-paycheck | i got my first paycheck | my first paycheck | happy
+late-to-work | i was late to work again | being late | guilty
+deadline | my project deadline got moved up | my deadline | anxious
+team-lunch | my team took me out for lunch | my team | happy
+side-hustle | i started a side business selling art | my side business | excited
+performance-review | my performance review is next week | my performance review | nervous
+night-shift | i switched to the night shift | the night shift | tired
+customer-yelled | a customer yelled at me today | the customer | frustrated
+internship | i got an internship for the summer | my internship | excited
+laid-off | i got laid off | losing my job | sad
+career-change | i want to change careers | changing careers | mixed
+
+## money
+rent-up | my rent went up again | my rent | anxious
+saving-up | im saving up for a car | saving up | excited
+overspent | i spent way too much this month | spending | guilty
+unexpected-bill | i got a huge unexpected bill | the bill | anxious
+paid-off-debt | i finally paid off my credit card | my credit card | proud
+lent-money | my friend never paid me back | the money | frustrated
+budget | im trying to stick to a budget | my budget | mixed
+raise | i asked for a raise | the raise | nervous
+broken-phone | my phone screen cracked and i cant afford a new one | my phone | frustrated
+first-apartment-cost | i cant believe how expensive everything is in my first apartment | my apartment | anxious
+
+## home
+roommate-mess | my roommate never cleans up | my roommate | frustrated
+noisy-neighbors | my neighbors are so loud at night | my neighbors | tired
+moving-out | im moving out of my parents house | moving out | mixed
+new-apartment | i just got my first apartment | my apartment | excited
+broken-heater | the heater in my apartment broke | the heater | frustrated
+decluttering | ive been decluttering my whole room | decluttering | calm
+chores | i always end up doing all the chores | the chores | angry
+garden | i started a little vegetable garden | my garden | happy
+leaky-roof | our roof is leaking | the roof | anxious
+power-out | our power has been out all day | the power outage | bored
+
+## moving and travel
+moving-city | were moving to a new city | moving | nervous
+flight-cancelled | my flight got cancelled | my flight | frustrated
+road-trip | im going on a road trip with friends | the road trip | excited
+first-time-abroad | im going abroad for the first time | going abroad | nervous
+lost-luggage | the airline lost my luggage | my luggage | angry
+homesick | i miss home since i moved | home | lonely
+vacation-over | my vacation just ended | my vacation | sad
+missed-train | i missed my train this morning | the train | frustrated
+camping | we went camping last weekend | camping | happy
+visa | im waiting to hear about my visa | my visa | anxious
+
+## food and cooking
+sourdough | my sourdough starter died | my sourdough starter | sad
+cooking-fail | i burned dinner again | dinner | frustrated
+new-recipe | i learned to make dumplings | making dumplings | proud
+picky-eater | my little brother wont eat anything i cook | cooking for my brother | frustrated
+diet | im trying to eat healthier | eating healthier | mixed
+baking-contest | im entering a baking contest | the baking contest | excited
+favorite-restaurant | my favorite restaurant closed | the restaurant | sad
+coffee | i think i drink way too much coffee | coffee | guilty
+family-dinner | i have to cook for my whole family | the family dinner | nervous
+food-truck | i tried a new food truck today | the food truck | happy
+
+## health and sleep
+cant-sleep | i havent been able to sleep well | sleep | tired
+sprained-ankle | i sprained my ankle playing soccer | my ankle | frustrated
+cold | ive had a cold all week | my cold | tired
+dentist | i have a dentist appointment tomorrow | the dentist | nervous
+gym-start | i started going to the gym | the gym | proud
+running-goal | i ran my first 5k | the 5k | proud
+allergies | my allergies are really bad this week | my allergies | frustrated
+new-glasses | i just got glasses | my glasses | mixed
+early-mornings | im trying to wake up earlier | waking up early | tired
+broken-arm | i broke my arm | my arm | frustrated
+
+## tech and online
+lost-files | my laptop crashed and i lost my files | my files | frustrated
+group-chat | everyone in the group chat ignored my message | the group chat | lonely
+online-friend | i made a friend online | my online friend | happy
+screen-time | i spend way too much time on my phone | my phone | guilty
+coding-project | im building my first app | my app | excited
+hacked | my account got hacked | my account | anxious
+viral-post | one of my posts went kind of viral | my post | excited
+new-computer | i finally built my own computer | my computer | proud
+video-game-loss | i keep losing in this one video game | the game | frustrated
+social-media-break | im taking a break from social media | social media | calm
+
+## hobbies and sport
+guitar | i started learning guitar | guitar | excited
+band | my band has our first show this weekend | the show | nervous
+painting | ive been painting a lot lately | painting | calm
+chess | i lost a chess tournament | the tournament | sad
+soccer-win | my team won the soccer game | the soccer game | happy
+cut-from-team | i got cut from the basketball team | the basketball team | sad
+knitting | i finished knitting my first sweater | the sweater | proud
+writing-novel | im writing a novel | my novel | excited
+photography | i got a new camera | my camera | excited
+marathon-training | im training for a marathon | marathon training | tired
+skateboarding | i finally landed a kickflip | skateboarding | proud
+ukulele | my ukulele teacher says im improving | the ukulele | happy
+puzzle | im stuck on this huge puzzle | the puzzle | frustrated
+dance-class | i signed up for a dance class | dance class | nervous
+fishing | i went fishing with my grandpa | fishing | happy
+
+## pets
+new-puppy | we adopted a puppy | the puppy | excited
+sick-cat | my cat is sick | my cat | anxious
+dog-died | my dog died last week | my dog | sad
+hamster-escaped | my hamster escaped | my hamster | anxious
+cat-ignores | my cat ignores me | my cat | lonely
+dog-training | im trying to train my dog | training my dog | frustrated
+fish-tank | i set up a fish tank | the fish tank | happy
+pet-sitting | im pet sitting for my neighbor | pet sitting | mixed
+vet-bill | the vet bill was huge | the vet bill | anxious
+rescued-bird | i found a hurt bird in the yard | the bird | anxious
+
+## family
+mom-on-case | my mom is always on my case | my mom | frustrated
+dad-proud | my dad said hes proud of me | my dad | happy
+sibling-fight | i got in a fight with my sister | my sister | angry
+new-baby | my aunt just had a baby | the baby | happy
+grandparents-visit | my grandparents are visiting | my grandparents | happy
+parents-divorce | my parents are getting divorced | the divorce | sad
+brother-annoying | my little brother keeps taking my stuff | my brother | frustrated
+family-reunion | we have a family reunion this weekend | the family reunion | mixed
+grandma-sick | my grandma is in the hospital | my grandma | anxious
+curfew | my parents gave me a curfew | the curfew | angry
+step-parent | my mom is getting remarried | my mom getting remarried | mixed
+cousin-wedding | my cousin is getting married | the wedding | excited
+grandpa-died | my grandpa passed away | my grandpa | sad
+family-trip | my family is going on a trip | the trip | excited
+chores-parents | my parents make me do everything | my parents | frustrated
+
+## friends
+best-friend-moved | my best friend moved away | my best friend | lonely
+left-out | my friends made plans without me | my friends | lonely
+friend-birthday | its my best friends birthday tomorrow | my friends birthday | excited
+friend-fight | i had a fight with my best friend | my best friend | sad
+new-friend | i made a new friend at school | my new friend | happy
+friend-secret | my friend told everyone my secret | my friend | angry
+friend-busy | my friends are always too busy to hang out | my friends | lonely
+sleepover | im having a sleepover this weekend | the sleepover | excited
+friend-drifting | i feel like me and my friend are drifting apart | my friend | sad
+reunion-friend | i saw an old friend after years | my old friend | happy
+
+## relationships
+crush | i have a crush on someone in my class | my crush | nervous
+breakup | my girlfriend broke up with me | the breakup | sad
+first-date | i have a first date tonight | my first date | nervous
+anniversary | its our one year anniversary | our anniversary | happy
+partner-busy | my boyfriend never has time for me | my boyfriend | lonely
+asked-out | i finally asked someone out | asking someone out | excited
+rejected | the person i like said no | being rejected | sad
+long-distance | im in a long distance relationship | long distance | lonely
+argument-partner | my partner and i keep arguing about small stuff | arguing | frustrated
+moving-in | were moving in together | moving in together | excited
+
+## feelings and life
+bored | im so bored | being bored | bored
+birthday-alone | its my birthday and nobody remembered | my birthday | lonely
+turning-eighteen | i turn eighteen next month | turning eighteen | excited
+nostalgic | i found my old diary | my old diary | mixed
+proud-of-self | i finally did something im proud of | what i did | proud
+overthinking | i keep overthinking everything | overthinking | anxious
+lazy-day | i stayed in bed all day | staying in bed | guilty
+new-year | i made a list of goals for the year | my goals | excited
+nothing-planned | i have nothing to do this weekend | the weekend | bored
+missed-chance | i missed a chance i really wanted | the chance i missed | sad
+big-decision | i have to make a big decision | the decision | confused
+compliment | a stranger complimented my jacket | the compliment | happy
+rainy-day | its been raining all week | the rain | tired
+sunday-scaries | i always feel weird on sunday nights | sunday nights | anxious
+learned-something | i learned how to change a tire | changing a tire | proud
+
+## people around
+neighbor-friendly | my new neighbor brought us cookies | my neighbor | happy
+rude-stranger | someone was really rude to me at the store | the stranger | angry
+bus-driver | the bus driver drove right past me | the bus | frustrated
+volunteering | i started volunteering at the animal shelter | volunteering | happy
+coach | my coach benched me | my coach | angry
+mentor | i found a mentor at work | my mentor | excited
+gossip | people at work are gossiping about me | the gossip | anxious
+new-classmate | theres a new kid in my class who sits alone | the new kid | mixed
+online-argument | i got into an argument online | the argument | frustrated
+lost-wallet-returned | someone returned my lost wallet | my wallet | happy
