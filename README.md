@@ -25,6 +25,29 @@ python3 neo_eliza.py --model elizilla.mdlo   # load the packed model instead of 
 
 Type `/memory` in the chat to see what it remembers, `quit` to leave.
 
+## Crisis safety
+
+Any message about suicide, self-harm or harming others skips everything else.
+Elizilla answers with the route crisis professionals advise: it says it cares,
+points to a real person right away (988 call or text, Crisis Text Line at
+741741, 911 or the emergency room if anyone is in danger, findahelpline.com
+outside the US), and encourages reaching out to someone trusted. It doesn't
+ask a listening question or try to counsel.
+
+Then it **locks for good**: every later message, and every later start, gets
+only the help resources. The lock is a file (`~/.elizilla/crisis.lock`) that
+records only when and which kind of message triggered it, never what was
+said. A person has to clear it on purpose:
+
+```bash
+python3 neo_eliza.py --reset-lock
+```
+
+The detection errs on the side of locking, so a figure of speech like "I could
+kill him" locks it too. The check and the lock live in `safety.py`, plain
+Python with no other dependencies, so any runner (including a future neural
+one, see [NEURAL_PLAN.md](NEURAL_PLAN.md)) uses the same ones.
+
 ## How a message is understood
 
 ```
@@ -50,6 +73,7 @@ SLM:   "What's been eating up the time you'd need to do your homework?"
 | `neo_eliza.py` | Scoring, mood, memory, dialogue handling, and the chat loop |
 | `slm.py`, `corpus.txt` | Small language model (4-gram, Kneser-Ney) that writes each reply from the rule's plan, with grammar and confidence gates. Try it alone: `python3 slm.py sample sad describer=lonely` |
 | `mdlo.py`, `elizilla.mdlo` | Packs the trained SLM into one `.mdlo` file, the same container Mira uses, and loads it back |
+| `safety.py` | Crisis detection, the advised crisis replies, and the lock |
 | `eval_slm.py` | Measures the SLM per intent (% written, % new wording, % copies) and writes a sheet for rating replies by hand |
 
 ## Writing a rule
@@ -143,4 +167,5 @@ python3 test_sections.py        # sentences split into the right sections
 python3 test_open_questions.py  # every reply ends with an open-ended question
 python3 test_slm.py             # SLM gates, generated replies, reflected questions
 python3 test_mdlo.py            # .mdlo layout, checksum, round trip, and that elizilla.mdlo is up to date
+python3 test_safety.py          # crisis messages caught, ordinary ones not, the lock holds
 ```

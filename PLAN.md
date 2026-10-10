@@ -67,4 +67,4 @@ gates, risks and decisions: [NEURAL_PLAN.md](NEURAL_PLAN.md).
 - Pure Python standard library only.
 - Every reply ends with an open-ended question.
 - The hand-written templates stay as the fallback, so quality never drops below today's.
-- Crisis language always gets the safety message, no matter which module is active.
+- Crisis language always gets the route crisis professionals advise and locks the bot for good (`safety.py`), no matter which module is active. Clearing the lock takes a deliberate `--reset-lock`.

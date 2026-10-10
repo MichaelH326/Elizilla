@@ -78,6 +78,10 @@ def pack(path=DEFAULT_PATH, slm=None):
             "min_confidence": slm.min_confidence,
             "min_word_confidence": slm.min_word_confidence,
         },
+        "safety": {
+            "crisis_lock": True,                     # runners must call safety.py before the model
+            "guard": "safety.py",
+        },
         "provenance": {
             "base_model": None,                      # trained from scratch
             "order": slm.order,

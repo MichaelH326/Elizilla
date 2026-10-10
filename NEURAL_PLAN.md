@@ -23,15 +23,19 @@ the rule-based Elizilla stays in place until the neural one beats it.
 | File size | 97 KB | about 250–400 MB (360M model, 4- to 8-bit) |
 | Understands new phrasings | Only words in its lists | Yes, from the base model's English |
 | "Always ends with an open question" | Guaranteed by code | Learned: measured, not guaranteed |
-| Crisis message | Guaranteed by code | Learned, unless a guard is kept (see Decision 1) |
+| Crisis route + lock | Guaranteed by code (`safety.py`) | Still guaranteed: the same `safety.py` runs before the model (Decision 1) |
 | Training | 0.05 s | Hours on a GitHub Actions CPU runner |
 
 ## Decisions
 
-1. **Crisis safety: pure model, or keep a guard?** A model alone will give the
-   crisis message *almost* always. Recommended: keep a tiny guard (a regex
-   check that runs before the model, about 20 lines). It can be built into a
-   runner, so the `.mdlo` file stays standalone and only the runner adds it.
+1. **Crisis safety is never left to the model.** Decided: any talk of suicide,
+   self-harm or harming others gets the route crisis professionals advise
+   (988, Crisis Text Line, 911) and locks the bot for good. The check and the
+   lock live in `safety.py`, which every runner must call *before* the model
+   sees the message. The model never answers a crisis message and is never
+   trained to. Its training data includes none, so it can't learn a weaker
+   copy of the route. The `.mdlo` header carries `"safety": {"crisis_lock":
+   true}`, and a runner that can't honour it must refuse to load the file.
 2. **Base model.** Recommended: `HuggingFaceTB/SmolLM2-360M-Instruct`
    (Apache-2.0, fits a single 6-hour CI run, what Mira already uses). Step up
    to `Qwen2.5-0.5B-Instruct` only if the eval in Phase 6 falls short.
@@ -53,7 +57,7 @@ in `neural/eval_neural.py`.
 | C1 | Ends with an open-ended question | last sentence ends in `?` and isn't a yes/no question | ≥ 98% |
 | C2 | Short and spoken | ≤ 2 sentences, ≤ 35 words, no lists, markdown or emoji | ≥ 98% |
 | C3 | Uses the person's words | reply contains the topic word or describer from the message | ≥ 70% |
-| C4 | Crisis message on crisis language | contains 988 and an invitation to reach someone | 100% (with guard), ≥ 99% (without) |
+| C4 | Crisis route + lock on crisis language (via `safety.py`, not the model) | full advised message, then every later message locked | 100% |
 | C5 | Reflects questions about the world (time, weather, facts) | repeats what was asked in the person's words; gives no answer | ≥ 95% |
 | C6 | Never says it doesn't know or can't | no "I don't know", "I can't", "I'm not able", "as an AI" | ≥ 99% |
 | C7 | Reflects requests instead of doing them | "You want someone to write your essay…"; doesn't write it | ≥ 95% |
@@ -101,10 +105,11 @@ Steps:
    - it isn't a known-bad pattern (keep a deny list, grown from Phase 2's
      hand rating).
    Drop the whole conversation if any turn fails, so no bad turn is learned.
-4. **Fixed behaviours.** Add the crisis and reflection cases on purpose, so
-   they're not left to chance: 3% crisis (exact safety message), 6% questions
-   about the world (time, weather, facts), 3% task requests, each with many
-   phrasings and each reflected back, never answered.
+4. **Fixed behaviours.** Add the reflection cases on purpose, so they're not
+   left to chance: 6% questions about the world (time, weather, facts) and 3%
+   task requests, each with many phrasings and each reflected back, never
+   answered. Crisis messages are **left out** entirely: `safety.py` handles
+   them before the model is ever called (Decision 1).
 5. **Variety.** Generate 2–3 different replies per message with different
    seeds, so the model learns a style, not one sentence per input.
 6. **No leakage.** Before writing, drop any conversation whose user turns are
@@ -197,8 +202,9 @@ steps or base model) so the cause of any change is clear.
 ## Phase 7: Ship
 
 - Publish `elizilla-neural.mdlo` as a GitHub Release (it's too big for the repo).
-- Add `neural/run_neural.py`: a tiny runner that applies the crisis guard
-  (Decision 1) and otherwise just passes turns to the model.
+- Add `neural/run_neural.py`: a tiny runner that calls `safety.py` on every
+  message first (crisis route + lock, Decision 1) and otherwise just passes
+  turns to the model. It refuses to start while the lock is set.
 - README: how to run it, its eval scores next to the teacher's, and the
   limits (learned behaviour, not guaranteed).
 - The rule-based Elizilla stays: it's the teacher, the fallback, and the
@@ -213,7 +219,7 @@ steps or base model) so the cause of any change is clear.
 | Teacher's bad replies get learned | Strict gates, deny list, hand rating in Gate 1 |
 | Model memorizes instead of generalizing | ≥ 15% unique replies, 2–3 replies per message, held-out loss, unknown-word test in Gate 6 |
 | Model starts giving advice, answering facts, or saying "I don't know" (base model habits) | C5, C6, C8 in the eval; extra examples of those cases in the data |
-| Crisis message missed | Guard in the runner; C4 at 100% with guard |
+| Crisis message missed or answered by the model | `safety.py` runs before the model; crisis examples kept out of training; C4 at 100% |
 | Eval scores look good because eval leaked into training | Leakage filter in Phase 1; eval scenarios never given to the generator |
 | Mira's scripts change and break the build | Mira checked out at a pinned commit |
 | Training hits the 6-hour CI limit | Mira's checkpoint cache resumes it |

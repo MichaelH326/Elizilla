@@ -21,6 +21,10 @@ It never answers questions or does tasks. Like a listener, it reflects them
 back with the person's own words ("So you're asking about the capital of
 France. What made you think of it?").
 
+Any talk of suicide, self-harm or harming others gets the crisis route
+professionals advise (988, Crisis Text Line, 911) and locks the bot for good;
+see safety.py. Clear the lock deliberately with --reset-lock.
+
 Run with --debug to see the sections, the winning rule, and where each reply
 came from. Run with --no-slm to use only the hand-written templates, or with
 --model elizilla.mdlo to load a packed model (see mdlo.py).
@@ -37,6 +41,7 @@ from rules import RULES, PHRASES
 from sentence import normalize, parse, main_frame, reflect
 from slm import SLM
 import mdlo
+import safety
 
 # ---------------------------------------------------------------------------
 # Emotion model
@@ -58,8 +63,6 @@ NEGATORS = {"not", "no", "never", "cannot", "hardly", "barely", "nothing"}
 INTENSIFIERS = {"very": 1.5, "really": 1.4, "so": 1.4, "extremely": 1.8,
                 "super": 1.5, "totally": 1.4, "incredibly": 1.7,
                 "slightly": 0.6, "kinda": 0.7, "somewhat": 0.7, "bit": 0.7}
-CRISIS_PATTERNS = [r"\bkill (my ?self|myself)\b", r"\bsuicid", r"\bend (it all|my life)\b",
-                   r"\bwant to die\b", r"\bhurt (my ?self|myself)\b"]
 
 
 # Questions about the world and requests for help aren't answered: like a
@@ -387,10 +390,12 @@ CLOSED_QUESTION = re.compile(
 # ---------------------------------------------------------------------------
 
 class NeoEliza:
-    def __init__(self, seed=None, debug=False, use_slm=True, model=None):
+    def __init__(self, seed=None, debug=False, use_slm=True, model=None, lock_path=safety.DEFAULT_LOCK):
         """model: path to an .mdlo file. Without one, the SLM trains from
-        corpus.txt and rules.py at startup (about 0.05 seconds)."""
+        corpus.txt and rules.py at startup (about 0.05 seconds).
+        lock_path: where the crisis lock is kept (see safety.py)."""
         self.rng = random.Random(seed)
+        self.lock = safety.Lock(lock_path)
         self.model_header = None
         if model and use_slm:
             self.writer, self.model_header = mdlo.load(model, seed=seed)
@@ -512,6 +517,9 @@ class NeoEliza:
 
     # --- main entry point ---
     def respond(self, text):
+        if self.lock.locked:
+            self.last_rule = "locked"
+            return safety.LOCKED_MESSAGE
         self.turn += 1
         self.last_source = None
         raw = text.strip()
@@ -519,13 +527,13 @@ class NeoEliza:
         sent = " ".join(words)
         toks = [w for w in words if re.match(r"[a-z0-9':]+$", w)]
 
-        if any(re.search(p, sent) for p in CRISIS_PATTERNS):
-            return self._say(
-                "I'm really glad you told me. I'm only a simple program, but what you're "
-                "feeling matters and you deserve real support. If you're in the US you can "
-                "call or text 988 (Suicide & Crisis Lifeline); elsewhere, please contact "
-                "local emergency services or a crisis line. Who is someone you trust that "
-                "you could reach out to right now?", raw)
+        # Crisis: the route crisis professionals advise, then the bot locks
+        # for good (see safety.py). Nothing else runs first.
+        kind = safety.check(raw, sent)
+        if kind:
+            self.lock.engage(kind)
+            self.last_rule = "crisis-" + kind
+            return safety.message_for(kind)
 
         frames, tagged = parse(words, raw)
         self.emotion.score(tagged)
@@ -694,6 +702,13 @@ class NeoEliza:
 # ---------------------------------------------------------------------------
 
 def main():
+    if "--reset-lock" in sys.argv:
+        cleared = safety.Lock().reset()
+        print("Crisis lock cleared." if cleared else "No crisis lock was set.")
+        return
+    if safety.Lock().locked:
+        print("NeoEliza:", safety.LOCKED_MESSAGE)
+        return
     debug = "--debug" in sys.argv
     model = sys.argv[sys.argv.index("--model") + 1] if "--model" in sys.argv[:-1] else None
     bot = NeoEliza(debug=debug, use_slm="--no-slm" not in sys.argv, model=model)
@@ -724,6 +739,8 @@ def main():
             continue
         bot.last_source = None
         print("NeoEliza:", bot.respond(text))
+        if bot.lock.locked:
+            break                                   # closed after a crisis message
         if debug:
             print(f"  (rule: {bot.last_rule}, words: {bot.last_source or 'fixed'})")
 
