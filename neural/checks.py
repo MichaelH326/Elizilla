@@ -51,7 +51,9 @@ NEGATIVE = re.compile(r"\b(?:hurts?|hurting|sick|died|dead|lost|lose|losing|fail
                       r"shouldnt have|shouldn't have|guilty|bad about|regret|messed up|mess up|my fault)\b", re.I)
 EXTRA_STOP = STOPWORDS | FILLER_WORDS | {"im", "dont", "cant", "ive", "gonna", "wanna", "got",
                                          "get", "really", "kinda", "lol", "idk", "ngl", "tbh", "?",
-                                         "know", "think", "guess", "mean", "maybe", "stuff", "thing"}
+                                         "know", "think", "guess", "mean", "maybe", "stuff", "thing",
+                                         "dunno", "fine", "meh", "nope", "yep", "yeah", "sure", "okay",
+                                         "whatever", "nah", "hmm", "cool", "lol", "haha", "fr", "btw"}
 
 
 def sentences(text):

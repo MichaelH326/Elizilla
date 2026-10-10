@@ -30,6 +30,11 @@ TOPIC_FRAMES = [
     "How are you feeling about {t}?",
     "What's {t} been like for you?",
 ]
+FEELING_FRAMES = [
+    "What's got you feeling {f}?",
+    "When did you start feeling {f}?",
+    "What's making you feel {f}?",
+]
 QUESTION_FRAMES = [
     "So you're asking about {t}. What made you think of it?",
     "What's got you curious about {t}?",
@@ -50,15 +55,20 @@ def mirror(message, rng=None):
     if not words:
         return rng.choice(OPEN)
     clause = reflect(" ".join(words))
+    # "its been" is normalized to "it is been"; say it the way people do.
+    clause = re.sub(r"\b(it|that|there|he|she) is been\b", r"\1 has been", clause)
+    clause = re.sub(r"\byou is\b", "you are", clause)
     if not content_words(message):
         return rng.choice(OPEN)                      # "idk", "ok": nothing to mirror
+    if words[0] in ("feeling", "feel", "feels", "felt") and 2 <= len(words) <= 8:
+        return rng.choice(FEELING_FRAMES).format(f=reflect(" ".join(words[1:])))
     has_verb = any(pos_of(w) in ("VERB", "AUX") for w in words[1:])
     if has_verb and 2 <= len(words) <= 14 and words[0] in (
             "i", "my", "we", "our", "everyone", "everything", "nobody", "it", "things",
             "people", "they", "the", "this", "life", "work", "school"):
         return rng.choice(CLAUSE_FRAMES).format(c=clause)
-    if len(words) <= 4:
-        return rng.choice(TOPIC_FRAMES).format(t=clause)
+    if len(words) <= 4 and not has_verb and pos_of(words[0]) != "VERB":
+        return rng.choice(TOPIC_FRAMES).format(t=clause)   # a thing, not an action: "the puppy"
     return rng.choice(OPEN)
 
 

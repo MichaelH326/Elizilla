@@ -94,9 +94,16 @@ def correct_spelling(word):
         stem = word[:-len(suffix)]
         if word.endswith(suffix) and (stem in VOCAB or stem + "e" in VOCAB):
             return word
-    limit = 1 if len(word) < 7 else 2
+    # Conservative on purpose: real words outside the lexicon ("kitchen",
+    # "annoying") must survive, so only fix one-edit typos of longer words
+    # that keep their first letter ("abuot" stays, "freind" -> "friend").
+    if len(word) < 6:
+        return word
+    limit = 1
     best, best_d, tie = word, limit + 1, False
     for v in VOCAB:
+        if v[0] != word[0]:
+            continue
         d = _edit_distance(word, v, limit)
         if d < best_d:
             best, best_d, tie = v, d, False

@@ -13,6 +13,7 @@ fixed, or any crisis line, is dropped whole.
 
 import argparse
 import json
+import re
 import os
 import random
 import sys
@@ -39,22 +40,59 @@ DIALOGUE_ACTS = {"name", "clarify", "why", "short-answers", "yes", "no", "repeat
                  "what-about-you", "your-mind", "thanks", "not-much"}
 
 
+# Elizilla rules that misfire often ("What kind of few pounds?", "Prepping and
+# outfit is a lot", "kitchen" -> "your kitten"): always offer them to the teacher.
+SHAKY_RULES = {"fallback", "detail", "pair", "activity", "pet", "work", "work-low", "work-good",
+               "want-to", "want", "i-am", "always", "you"}
+# Coaching, praise and therapist talk: not Elizilla's voice.
+COACHING = re.compile(r"\b(?:congratulations|congrats|inspiring|proud of you|strateg(?:y|ies)|tips|"
+                      r"incorporate|prioriti[sz]e|plan to|plans? (?:do|will)|how (?:do|will|can|could) you plan|"
+                      r"what changes|steps|improve|motivat\w*|milestone|journey|resilien\w*|self-care|"
+                      r"it's important|remember that|valid(?:ating)?|it's okay to|it seems like you're)\b", re.I)
+
+
+def invented(history, reply):
+    """Words in the reply that nobody said and that aren't ordinary listener
+    words: a sign the teacher made up a detail ("your hamster's name")."""
+    said = set(re.findall(r"[a-z']+", " ".join(u for u, _ in history).lower()))
+    said |= {w[:-1] for w in said if w.endswith("s")} | {w + "s" for w in said}
+    return [w for w in re.findall(r"[a-z']+", reply.lower())
+            if len(w) > 3 and w not in said and w not in listener_words()]
+
+
+_LISTENER = None
+
+
+def listener_words():
+    """Everything Elizilla itself ever says: its templates, corpus and canned replies."""
+    global _LISTENER
+    if _LISTENER is None:
+        words = set()
+        for name in ("corpus.txt", "rules.py", "neo_eliza.py", os.path.join("neural", "mirror.py")):
+            with open(os.path.join(os.path.dirname(HERE), name)) as fh:
+                words |= set(re.findall(r"[a-z']+", fh.read().lower()))
+        _LISTENER = words | {"feeling", "feel", "feels", "felt", "like", "about", "really", "kind", "part",
+                             "most", "made", "make", "makes", "think", "going", "been", "happened"}
+    return _LISTENER
+
+
 def is_weak(rule, message, reply):
     if rule in DIALOGUE_ACTS or not content_words(message):
         return False             # nothing to reflect: "hiya", "k"; Elizilla's own handling stays
-    if rule == "fallback":
+    if rule in SHAKY_RULES:
         return True
     # Ignores every word the person said: the teacher may do better.
     return copy_score(message, reply) == 0
 
 
-def best_candidate(message, candidates, earlier, floor=0.0, avoid=()):
+def best_candidate(message, candidates, earlier, floor=0.0, avoid=(), history=()):
     """The candidate that passes every check and reuses the most of the
     person's words, if it reuses more than `floor` (what Elizilla managed).
     floor=None accepts any passing candidate (nothing to reuse: "hi")."""
     # Elizilla asks one short question at a time; so must the teacher.
     ok = [c for c in candidates if not problems(message, c, earlier) and c not in avoid
-          and c.count("?") == 1 and len(c.split()) <= 30]
+          and c.count("?") == 1 and len(c.split()) <= 18 and not COACHING.search(c)
+          and len(invented(history, c)) <= 1]
     if not ok:
         return None
     best = max(ok, key=lambda c: copy_score(message, c) or 0)
@@ -70,6 +108,8 @@ class Builder:
         # doesn't learn a handful of stock questions by heart.
         self.max_uses = max_uses
         self.used = Counter()
+        self.openings = Counter()
+        self.turns = 0
         self.slm = SLM(seed=seed)
         self.lock_dir = tempfile.mkdtemp(prefix="elizilla-build-")
         self.stats = Counter()
@@ -90,7 +130,11 @@ class Builder:
             rule = bot.last_rule
             source = "elizilla"
             bad = problems(line, reply, earlier)
-            overused = self.max_uses and self.used[reply] >= self.max_uses and rule not in ("name",)
+            opening = " ".join(reply.lower().split()[:3])
+            overused = self.max_uses and rule not in ("name",) and (
+                self.used[reply] >= self.max_uses
+                # The same opening ("What kind of ...") in over 3% of replies is a habit too.
+                or (self.turns > 100 and self.openings[opening] > 0.03 * self.turns))
             if bad or overused or is_weak(rule, line, reply):
                 fixed = None
                 if self.teacher:
@@ -100,7 +144,8 @@ class Builder:
                     else:
                         floor = 0.0 if bad else (copy_score(line, reply) or 0)
                     fixed = best_candidate(line, cands, earlier, floor=floor,
-                                           avoid={r for r, k in self.used.items() if k >= self.max_uses})
+                                           avoid={r for r, k in self.used.items() if k >= self.max_uses},
+                                           history=history + [(line, None)])
                     source = "teacher" if fixed else source
                     if overused:
                         self.stats["overused:" + ("rewritten" if fixed else "kept")] += 1
@@ -118,6 +163,8 @@ class Builder:
                     self.stats["dropped:" + bad[0]] += 1
                     return None
             self.used[reply] += 1
+            self.openings[" ".join(reply.lower().split()[:3])] += 1
+            self.turns += 1
             self.stats["turns:" + source] += 1
             turns.append({"user": line, "assistant": reply, "source": source, "rule": rule})
             earlier.append(reply)
