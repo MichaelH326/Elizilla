@@ -48,10 +48,13 @@ jobs:
       - name: Real teacher works (2 situations, smallest teacher)
         run: |
           T=$(python neural/get_teacher.py smollm2-1.7b --out models | tail -1)
-          python neural/profiles.py --teacher "$T" --limit 2 --per-situation 1 --out t_profiles.jsonl
+          python neural/profiles.py --teacher "$T" --limit 3 --per-situation 1 --show-rejected --out t_profiles.jsonl
           python neural/simulate.py t_profiles.jsonl --per-profile 1 --out t_people.jsonl
           python neural/build.py t_people.jsonl --teacher "$T" --out t_built.jsonl
           head -c 2000 t_profiles.jsonl; echo; head -c 3000 t_built.jsonl
+          # The teacher has to actually produce something, not just run.
+          test -s t_profiles.jsonl || { echo "teacher wrote no usable profiles"; exit 1; }
+          test -s t_built.jsonl || { echo "no conversations survived the build"; exit 1; }
 
       - name: Fine-tune 2 steps
         run: |

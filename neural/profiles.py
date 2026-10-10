@@ -14,6 +14,7 @@ import random
 import re
 import sys
 import time
+from collections import Counter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -46,7 +47,7 @@ OTHER_LINES = ["my friend says im overthinking it", "my mom doesnt really get it
                "i told my best friend about {about}", "nobody else knows yet", "it started last week",
                "its been like this for a while", "i guess thats whats going on", "anyway thats my day",
                "i didnt really expect it", "everyone keeps asking me about {about}"]
-AI_TALK = re.compile(r"\b(?:as an ai|language model|chatbot|assistant)\b", re.I)
+AI_TALK = re.compile(r"\b(?:as an ai|language model|chatbot|assistant|bot)\b", re.I)
 
 
 def template_profile(situation, rng):
@@ -58,23 +59,30 @@ def template_profile(situation, rng):
     return {"facts": [situation["event"]], "lines": [lines[0]] + rest}
 
 
-def acceptable(profile):
-    """Keep a profile only if every line is ordinary, short, and crisis-free."""
-    if not profile or len(profile["lines"]) < 4:
-        return False
+def screen(profile):
+    """Drop single bad lines (too long, talk about AI/chatbots); reject the
+    whole profile only for crisis content or too few lines left.
+    Returns (profile or None, reason)."""
+    if not profile:
+        return None, "unparseable"
     for line in profile["lines"] + profile["facts"]:
-        if safety.check(line) or AI_TALK.search(line) or len(line.split()) > 30:
-            return False
-    return True
+        if safety.check(line):
+            return None, "crisis"
+    lines = [l for l in profile["lines"] if not AI_TALK.search(l) and 2 <= len(l.split()) <= 30]
+    if len(lines) < 4:
+        return None, "too-few-lines"
+    return {**profile, "lines": lines}, "ok"
 
 
-def build(teacher, situations, per_situation, rng):
-    out, rejected = [], 0
+def build(teacher, situations, per_situation, rng, show_rejected=False):
+    out, rejected = [], Counter()
     for sit in situations:
         for k in range(per_situation):
-            prof = teacher.profile(sit) if teacher else template_profile(sit, rng)
-            if not acceptable(prof):
-                rejected += 1
+            prof, why = screen(teacher.profile(sit) if teacher else template_profile(sit, rng))
+            if not prof:
+                rejected[why] += 1
+                if show_rejected:
+                    print(f"--- rejected ({why}) {sit['id']}:\n{getattr(teacher, 'last_raw', '')[:1500]}\n---")
                 continue
             out.append({"id": f"{sit['id']}#{k}", "situation": sit["id"], "area": sit["area"],
                         "mood": sit["mood"], "about": sit["about"], "held_out": sit["held_out"], **prof,
@@ -91,6 +99,7 @@ def main():
     p.add_argument("--shards", type=int, default=1)
     p.add_argument("--limit", type=int, default=0, help="only the first N situations (benchmarks)")
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--show-rejected", action="store_true", help="print the teacher's raw text for rejects")
     p.add_argument("--out", required=True)
     args = p.parse_args()
 
@@ -100,12 +109,13 @@ def main():
         sits = sits[:args.limit]
     t = teachers.load(args.teacher, seed=args.seed)
     start = time.time()
-    profs, rejected = build(t, sits, args.per_situation, random.Random(args.seed + args.shard))
+    profs, rejected = build(t, sits, args.per_situation, random.Random(args.seed + args.shard),
+                            args.show_rejected)
     with open(args.out, "w") as fh:
         for pr in profs:
             fh.write(json.dumps(pr) + "\n")
     tps = f", {t.tokens_per_second:.1f} tokens/s" if t and t.tokens_per_second else ""
-    print(f"{len(profs)} profiles from {len(sits)} situations, {rejected} rejected, "
+    print(f"{len(profs)} profiles from {len(sits)} situations, rejected {dict(rejected)}, "
           f"{time.time() - start:.0f}s{tps} -> {args.out}")
 
 

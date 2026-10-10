@@ -57,7 +57,7 @@ NeoEliza: That's really good to hear. What do you think made the difference?
 Person: everyone in the group chat ignored my message
 NeoEliza: That sounds lonely. What did you say in the group chat?"""
 
-PROFILE_SYSTEM = """You write realistic chat messages for a research dataset. Given a situation, invent one ordinary person in it and write what they would type to a friendly chatbot over a short conversation.
+PROFILE_SYSTEM = """You write realistic chat messages for a research dataset. Given a situation, invent one ordinary person in it and write what they would text to someone who is listening, over a short conversation.
 
 Rules:
 - Casual texting voice: mostly lowercase, short, some missing apostrophes, occasional slang. Vary it.
@@ -83,7 +83,8 @@ class Teacher:
             max_tokens=max_tokens, temperature=temperature, top_p=0.95)
         self.seconds += time.time() - t
         self.tokens_out += out.get("usage", {}).get("completion_tokens", 0)
-        return out["choices"][0]["message"]["content"]
+        self.last_raw = out["choices"][0]["message"]["content"]
+        return self.last_raw
 
     def replies(self, history, n=3):
         """history: list of (person, neoeliza) pairs; the last pair has neoeliza=None."""
@@ -107,13 +108,20 @@ class Teacher:
 
 
 def parse_profile(text):
+    """JSON from a small model is often slightly broken (code fences, trailing
+    commas, a missing brace), so fall back to pulling out the quoted lines."""
+    data = None
     m = re.search(r"\{.*\}", text, re.S)
-    if not m:
-        return None
-    try:
-        data = json.loads(m.group(0))
-    except json.JSONDecodeError:
-        return None
+    if m:
+        try:
+            data = json.loads(re.sub(r",\s*([\]}])", r"\1", m.group(0)))
+        except json.JSONDecodeError:
+            data = None
+    if data is None:
+        def strings(key):
+            block = re.search(rf'"{key}"\s*:\s*\[(.*?)(?:\]|$)', text, re.S)
+            return re.findall(r'"((?:[^"\\]|\\.)*)"', block.group(1)) if block else []
+        data = {"facts": strings("facts"), "lines": strings("lines")}
     lines = [str(l).strip() for l in data.get("lines", []) if str(l).strip()]
     facts = [str(f).strip() for f in data.get("facts", []) if str(f).strip()]
     return {"facts": facts[:6], "lines": lines[:12]} if len(lines) >= 4 else None
