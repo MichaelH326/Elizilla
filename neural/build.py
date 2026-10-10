@@ -26,7 +26,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.dirname(HERE))
 
 import safety  # noqa: E402
-from checks import copy_score, problems  # noqa: E402
+from checks import content_words, copy_score, problems  # noqa: E402
 from mirror import mirror  # noqa: E402
 from neo_eliza import NeoEliza  # noqa: E402
 from slm import SLM  # noqa: E402
@@ -40,17 +40,22 @@ DIALOGUE_ACTS = {"name", "clarify", "why", "short-answers", "yes", "no", "repeat
 
 
 def is_weak(rule, message, reply):
-    if rule in DIALOGUE_ACTS:
-        return False
+    if rule in DIALOGUE_ACTS or not content_words(message):
+        return False             # nothing to reflect: "hiya", "k"; Elizilla's own handling stays
     if rule == "fallback":
         return True
     # Ignores every word the person said: the teacher may do better.
     return copy_score(message, reply) == 0
 
 
-def best_candidate(message, candidates, earlier):
+def best_candidate(message, candidates, earlier, floor=0.0):
+    """The candidate that passes every check and reuses the most of the
+    person's words, if it reuses more than `floor` (what Elizilla managed)."""
     ok = [c for c in candidates if not problems(message, c, earlier)]
-    return max(ok, key=lambda c: copy_score(message, c) or 0) if ok else None
+    if not ok:
+        return None
+    best = max(ok, key=lambda c: copy_score(message, c) or 0)
+    return best if (copy_score(message, best) or 0) > floor else None
 
 
 class Builder:
@@ -80,7 +85,7 @@ class Builder:
                 fixed = None
                 if self.teacher:
                     cands = self.teacher.replies(history + [(line, None)], n=3)
-                    fixed = best_candidate(line, cands, earlier)
+                    fixed = best_candidate(line, cands, earlier, floor=0.0 if bad else (copy_score(line, reply) or 0))
                     source = "teacher" if fixed else source
                 if not fixed and bad:
                     m = mirror(line, rng)

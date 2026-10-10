@@ -586,7 +586,7 @@ class NeoEliza:
             return self._say(self.pick(WHY_FOLLOWUP, {"prev": self.last_user}), raw, keep_last=True)
 
         content = [t for t in toks if t not in FILLER_WORDS]
-        if toks[0] in ("hi", "hello", "hey", "greetings", "yo", "sup"):
+        if toks[0] in ("hi", "hiya", "hello", "hey", "heya", "howdy", "greetings", "yo", "sup"):
             self.short_streak = 0
         else:
             self.short_streak = self.short_streak + 1 if len(content) <= 1 and len(toks) <= 3 else 0

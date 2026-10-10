@@ -205,13 +205,13 @@ RULES = [
 
     # ---------------- wants, likes, beliefs ----------------
     dict(name="want-to", weight=7,
-         when=dict(who="@self", action="@desire", follow="to"),
+         when=dict(who="@self", action="@desire", follow="to", **{"not": False}),
          say=["Why do you {action} to {follow}?",
               "How long have you wanted to {follow}?",
               "What would really change if you could {follow}?",
               "What's standing in the way?"]),
     dict(name="want", weight=6,
-         when=dict(who="@self", action="@desire", what="any"),
+         when=dict(who="@self", action="@desire", what="any", **{"not": False}),
          say=["Why do you {action} {what}?",
               "What would it mean to you to have {what}?",
               "What's standing in the way?"]),
@@ -306,7 +306,7 @@ RULES = [
 # Idioms: fixed phrases that grammar doesn't explain well. These are matched
 # as regular expressions on the whole normalized sentence.
 PHRASES = [
-    dict(name="greeting", weight=3, pattern=r"^(?:hello|hi|hey|greetings|yo|sup)\b",
+    dict(name="greeting", weight=3, pattern=r"^(?:hello|hi|hiya|hey|heya|howdy|greetings|yo|sup)\b",
          say=["Hello. What's on your mind today?", "Hi there. How are you feeling right now?"]),
     dict(name="thanks", weight=4, pattern=r"\bthank",
          say=["You're welcome. What else is on your mind?",

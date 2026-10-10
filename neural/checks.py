@@ -8,6 +8,7 @@ use this file, so the training data and the scoring can never disagree.
 Hard checks (any failure means the reply can't be used or scores as a miss):
   not-question     doesn't end in "?"
   closed-question  the final question can be answered yes/no
+  cut-off          the question stops mid-phrase ("... to do the?")
   too-long         more than 3 sentences or 40 words
   banned           "I don't know", "as an AI", advice ("you should") ...
   format           lists, markdown, emoji, links
@@ -33,6 +34,8 @@ BANNED = re.compile(
     r"|i suggest|my advice|make sure (?:you|to)|it's important to)\b", re.I)
 FORMAT = re.compile(r"[*_`#\[\]{}|<>]|^\s*(?:\d+[.)]|-)\s|https?://|www\.|"
                     r"[\U0001F000-\U0001FAFF☀-➿]", re.M)
+CUT_OFF = {"the", "a", "an", "your", "my", "and", "or", "but", "to", "of", "with", "for", "in", "on",
+           "at", "so", "do", "does", "did", "is", "are", "was", "be", "been", "very", "really", "than"}
 SENTENCES = re.compile(r"(?<=[.!?])\s+")
 UPBEAT = re.compile(r"\b(?:best part|enjoy|love most|like most|highlight|going well|so great|"
                     r"that's great|nice!|oh nice|love to hear|good to hear|glad)\b", re.I)
@@ -108,6 +111,9 @@ def problems(message, reply, earlier=()):
         out.append("not-question")
     elif sents and CLOSED_QUESTION.match(sents[-1]):
         out.append("closed-question")
+    last_words = re.findall(r"[a-z']+", sents[-1].lower()) if sents else []
+    if last_words and last_words[-1] in CUT_OFF:
+        out.append("cut-off")                    # "Why do you want to do the?"
     if len(sents) > 3 or len(r.split()) > 40:
         out.append("too-long")
     if BANNED.search(r):

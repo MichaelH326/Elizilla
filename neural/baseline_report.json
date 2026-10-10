@@ -1,6 +1,6 @@
 {
  "elizilla (rules)": {
-  "hard_pct": 99.0,
+  "hard_pct": 97.1,
   "rows": [
    {
     "id": "k-copy-1",
@@ -250,14 +250,18 @@
    },
    {
     "id": "k-world-3",
-    "ok": true,
+    "ok": false,
     "turns": [
      "whats the tallest mountain in the world?"
     ],
     "replies": [
      "What's got you curious about the tallest mountain in the?"
     ],
-    "problems": []
+    "problems": [
+     [
+      "cut-off"
+     ]
+    ]
    },
    {
     "id": "k-req-1",
@@ -339,7 +343,11 @@
      "What's something you're looking forward to?",
      "What do you like most about it?"
     ],
-    "problems": []
+    "problems": [
+     [
+      "cut-off"
+     ]
+    ]
    },
    {
     "id": "k-name-1",
@@ -891,7 +899,7 @@
     2
    ],
    "B11/known": [
-    3,
+    2,
     3
    ],
    "B12/known": [
@@ -904,13 +912,13 @@
    ]
   },
   "known": [
-   26,
+   25,
    36
   ],
   "held_out": [
    18,
    32
   ],
-  "adapt": 0.78
+  "adapt": 0.81
  }
 }

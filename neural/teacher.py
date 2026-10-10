@@ -122,6 +122,13 @@ def parse_profile(text):
             block = re.search(rf'"{key}"\s*:\s*\[(.*?)(?:\]|$)', text, re.S)
             return re.findall(r'"((?:[^"\\]|\\.)*)"', block.group(1)) if block else []
         data = {"facts": strings("facts"), "lines": strings("lines")}
+    if not data.get("lines"):
+        # Plain text instead of JSON: use each line, or each sentence of a paragraph.
+        rough = [l for l in text.splitlines() if l.strip()]
+        if len(rough) < 4:
+            rough = re.split(r"(?<=[.!?])\s+", text)
+        data = {"facts": data.get("facts", []),
+                "lines": [re.sub(r"^\s*(?:\d+[.)]|[-*•])\s*", "", l).strip().strip('"') for l in rough]}
     lines = [str(l).strip() for l in data.get("lines", []) if str(l).strip()]
     facts = [str(f).strip() for f in data.get("facts", []) if str(f).strip()]
     return {"facts": facts[:6], "lines": lines[:12]} if len(lines) >= 4 else None
