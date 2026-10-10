@@ -62,6 +62,11 @@ def mirror(message, rng=None):
         return rng.choice(OPEN)                      # "idk", "ok": nothing to mirror
     if words[0] in ("feeling", "feel", "feels", "felt") and 2 <= len(words) <= 8:
         return rng.choice(FEELING_FRAMES).format(f=reflect(" ".join(words[1:])))
+    # Texting often drops the "I": "trying not to eat anything too hard",
+    # "got my dentist appt tomorrow". Put "you" back.
+    if pos_of(words[0]) == "VERB" and 2 <= len(words) <= 12 and words[0] not in ("is", "was", "like"):
+        lead = "you are " if words[0].endswith("ing") else "you "
+        return rng.choice(CLAUSE_FRAMES).format(c=lead + reflect(" ".join(words)))
     has_verb = any(pos_of(w) in ("VERB", "AUX") for w in words[1:])
     if has_verb and 2 <= len(words) <= 14 and words[0] in (
             "i", "my", "we", "our", "everyone", "everything", "nobody", "it", "things",

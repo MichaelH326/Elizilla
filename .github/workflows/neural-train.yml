@@ -12,6 +12,9 @@ on:
       profiles_run_id:
         description: "Reuse the profiles from this earlier run (skips writing new ones); blank = write new"
         default: ""
+      built_run_id:
+        description: "Reuse the built conversations from this earlier run (skips profiles and builds); blank = build"
+        default: ""
       max_uses:
         description: "Rewrite a reply once it has been used this often in a shard (0 = off)"
         default: "4"
@@ -88,7 +91,7 @@ jobs:
 
   profiles:
     needs: [setup, teacher]
-    if: inputs.profiles_run_id == ''
+    if: inputs.profiles_run_id == '' && inputs.built_run_id == ''
     runs-on: ubuntu-latest
     timeout-minutes: 350
     strategy:
@@ -117,7 +120,7 @@ jobs:
 
   build:
     needs: [setup, profiles]
-    if: ${{ !failure() && !cancelled() }}
+    if: ${{ !failure() && !cancelled() && inputs.built_run_id == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 350
     strategy:
@@ -162,15 +165,22 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
       - uses: actions/download-artifact@v4
-        with: {pattern: "built-*", merge-multiple: true, path: parts}
-      - name: Clean, check and export
+        with:
+          pattern: "built-*"
+          merge-multiple: true
+          path: parts
+          run-id: ${{ inputs.built_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+      - name: Repair, clean, check and export
         run: |
           mkdir -p data
-          python neural/clean.py parts/built-*.jsonl --out data/clean.jsonl --card data/dataset_card.json
+          python neural/repair.py parts/built-*.jsonl --out data/repaired.jsonl
+          python neural/clean.py data/repaired.jsonl --out data/clean.jsonl --card data/dataset_card.json
           python neural/export.py data/clean.jsonl --out data/neural_data.jsonl --val-out data/neural_data_val.jsonl
           python neural/review.py sheet data/clean.jsonl --n 200 --out data/review.tsv
           python -c "import json; c=json.load(open('data/dataset_card.json')); c['teacher']='${{ inputs.teacher }}'; json.dump(c, open('data/dataset_card.json','w'), indent=1)"
           cat data/dataset_card.json | head -60
+          python neural/inspect_data.py data/clean.jsonl --samples 25
       - uses: actions/upload-artifact@v4
         with: {name: dataset, path: data}
 
