@@ -47,6 +47,8 @@ INTENT_SLOTS = {
     "cannot": {"action": "sleep"}, "worry": {"action": "worry"}, "feel-like": {"follow": "nobody cares"},
     "feel-not": {"describer": "happy"}, "ordinary": {"describer": "normal"},
     "everyone": {"who": "everyone"}, "loss": {"whom": "your grandpa"},
+    "reflect-question": {"topic": "the capital of france"},
+    "reflect-request": {"follow": "write your essay for you"},
 }
 
 

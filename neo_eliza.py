@@ -17,8 +17,9 @@ Pipeline for every message:
                   the SLM's grammar and confidence gates, a hand-written
                   template is used. Every reply ends in an open-ended question.
 
-Like Mira, it is honest about its limits: it says it can't know the time,
-weather or news, doesn't guess at facts, and says it can't do tasks.
+It never answers questions or does tasks. Like a listener, it reflects them
+back with the person's own words ("So you're asking about the capital of
+France. What made you think of it?").
 
 Run with --debug to see the sections, the winning rule, and where each reply
 came from. Run with --no-slm to use only the hand-written templates, or with
@@ -61,19 +62,39 @@ CRISIS_PATTERNS = [r"\bkill (my ?self|myself)\b", r"\bsuicid", r"\bend (it all|m
                    r"\bwant to die\b", r"\bhurt (my ?self|myself)\b"]
 
 
-# Mira's honesty contract: say what you can't know instead of guessing.
-CANT_KNOW = re.compile(r"\b(?:what time|what day is|what is the date|today s date|todays date"
-                       r"|weather|forecast|news|stock price|the score)\b")
-FACT_QUESTION = re.compile(r"^(?:what|who|when|where|how many|how much|how far|how old|how tall)\b.*\b"
-                           r"(?:capital|president|population|invented|discovered|distance|tallest"
-                           r"|largest|biggest|fastest|square root|plus|minus|times|meaning of|define"
-                           r"|definition|located|born)\b")
-TASK_REQUEST = re.compile(r"^(?:can|could|will|would) you (?:please )?(?:help me (?:with|write|do|fix)"
-                          r"|write|code|fix|calculate|search|look up|google|book|order|send|make me|do my)\b"
-                          r"|^(?:please )?(?:write|calculate|search|look up|google|translate) ")
-CANT_KNOW_SAY = ["I can't know that, I don't have a clock or the internet. What made you think of it?"]
-FACT_SAY = ["I don't know that one, and I'd rather not guess. What got you curious about it?"]
-CANT_DO_SAY = ["I can't do that one, honestly. I'm only here to listen. What's going on with it?"]
+# Questions about the world and requests for help aren't answered: like a
+# listener, Elizilla reflects them back with the person's own words.
+WORLD_QUESTION = re.compile(r"\b(?:what time|what day is|what is the date|today s date|todays date"
+                            r"|weather|forecast|news|stock price|the score)\b"
+                            r"|^(?:what|who|when|where|how many|how much|how far|how old|how tall)\b.*\b"
+                            r"(?:capital|president|population|invented|discovered|distance|tallest"
+                            r"|largest|biggest|fastest|square root|plus|minus|times|meaning of|define"
+                            r"|definition|located|born)\b")
+REQUEST = re.compile(r"^(?:can|could|will|would) you (?:please )?(?P<req>(?:help me (?:with|write|do|fix)"
+                     r"|write|code|fix|calculate|search|look up|google|book|order|send|make me|do my)\b.*)"
+                     r"|^(?:please )?(?P<req2>(?:write|calculate|search|look up|google|translate) .*)")
+QUESTION_AUX = {"is", "are", "was", "were", "do", "does", "did", "will", "can", "would", "should", "could"}
+REFLECT_QUESTION = ["So you're asking about {topic}. What made you think of it?",
+                    "What's on your mind about {topic}?",
+                    "What got you wondering about that?"]
+REFLECT_REQUEST = ["You want someone to {follow}. What's going on with it?",
+                   "So you'd like someone to {follow}. How's it going so far?"]
+
+
+def question_topic(words):
+    """The thing a question is about, in the person's words:
+    "what is the capital of france" -> "the capital of france"."""
+    w = [x for x in words if x != "?"]
+    while w and w[0] in WH_START | {"many", "much", "far", "old", "tall"}:
+        w.pop(0)
+    while w and w[0] in QUESTION_AUX:
+        w.pop(0)
+    out = []
+    for x in w:
+        if x in QUESTION_AUX or x in ("like", "it"):
+            break
+        out.append(x)
+    return reflect(" ".join(out)) if out else None
 
 
 def emotion_value(tagged_word):
@@ -526,17 +547,16 @@ class NeoEliza:
             if k == "name":
                 return self._say(f"Nice to meet you, {v.capitalize()}. What brings you here today?", raw)
 
-        # Honesty: things a small offline listener can't know or do.
-        if raw.endswith("?") or toks[0] in WH_START:
-            if CANT_KNOW.search(sent):
-                self.last_rule = "cant-know"
-                return self._say(self.write("cant-know", CANT_KNOW_SAY), raw)
-            if FACT_QUESTION.search(sent):
-                self.last_rule = "dont-know-fact"
-                return self._say(self.write("dont-know-fact", FACT_SAY), raw)
-        if TASK_REQUEST.search(sent):
-            self.last_rule = "cant-do"
-            return self._say(self.write("cant-do", CANT_DO_SAY), raw)
+        # Questions about the world and requests: reflect them back.
+        if (raw.endswith("?") or toks[0] in WH_START) and WORLD_QUESTION.search(sent):
+            self.last_rule = "reflect-question"
+            topic = question_topic(words)
+            return self._say(self.write("reflect-question", REFLECT_QUESTION, {"topic": topic} if topic else {}), raw)
+        m = REQUEST.search(sent)
+        if m:
+            self.last_rule = "reflect-request"
+            follow = reflect(m.group("req") or m.group("req2"))
+            return self._say(self.write("reflect-request", REFLECT_REQUEST, {"follow": follow}), raw)
 
         # Dialogue acts
         if (toks in (["what", "do", "you", "mean"], ["huh"], ["what"])
@@ -589,6 +609,10 @@ class NeoEliza:
     def _fallback(self, words, toks, frames, raw):
         roll = self.rng.random()
         if raw.endswith("?"):
+            topic = question_topic(words)
+            if topic:
+                self.last_rule = "reflect-question"
+                return self.write("reflect-question", REFLECT_QUESTION, {"topic": topic})
             return self.pick(QUESTION)
 
         # Bring back a remembered fact if it relates to what they just said.

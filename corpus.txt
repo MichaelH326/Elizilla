@@ -186,17 +186,15 @@ ack-neutral: gotcha .
 ack-neutral: okay .
 ack-neutral: i hear you .
 
-# Honest limits, the same contract as Mira: never guess facts.
-cant-know: i can't know that , i don't have a clock or the internet . what made you think of it ?
-cant-know: honestly , i have no way of checking that from here . what's going on that you need it ?
-cant-know: i can't see that from here . i'm just a small program that listens . what's on your mind about it ?
-dont-know-fact: i don't know that one , and i don't want to guess . what got you curious about it ?
-dont-know-fact: that's outside what i know , honestly . what's behind the question ?
-dont-know-fact: i'm not the right one to ask about facts . i'm better at listening . what's got you wondering ?
-clarify: hmm , what's the it we're talking about ?
-clarify: i lost the thread a little . what do you mean by that ?
-clarify: which part do you mean ?
-clarify: say a little more ? what are you thinking of ?
+# Questions about the world: reflect them back, never answer or say "I don't know".
+reflect-question: so you're asking about <topic> . what made you think of it ?
+reflect-question: you're wondering about <topic> . what got you thinking about it ?
+reflect-question: <topic> , huh . what's on your mind about <topic> ?
+reflect-question: what's got you curious about <topic> ?
+reflect-question: what made you think of <topic> today ?
+reflect-question: what got you wondering about that ?
+reflect-question: what's behind the question ?
+reflect-question: what made you think of it ?
 
 # Feelings
 sad: aw , i'm sorry . what's been making you feel <describer> ?
@@ -461,6 +459,8 @@ follow-low: how are you holding up ?
 follow-positive: what's been going well ?
 follow-positive: what's been the highlight so far ?
 follow-positive: what do you think is behind that ?
-cant-do: i can't do that one , honestly . i'm only here to listen . what's going on with it ?
-cant-do: that's not something i can do , i just listen . what's making it feel urgent ?
-cant-do: i can't help with tasks like that , but i'm happy to listen . how's it going with it so far ?
+reflect-request: you want someone to <follow> . what's going on with it ?
+reflect-request: so you'd like someone to <follow> . how's it going so far ?
+reflect-request: what's making you want someone to <follow> ?
+reflect-request: you're looking for someone to <follow> . what's the hardest part of it ?
+reflect-request: so you want someone to <follow> . what's been getting in the way ?

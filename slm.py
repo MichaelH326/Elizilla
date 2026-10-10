@@ -255,6 +255,11 @@ def grammar_problem(q, known):
     return None
 
 
+# Intents whose wording must come only from their own lines: borrowing
+# "What got you into <topic>?" from a hobby reply misreads a question.
+OWN_WORDING = {"reflect-question"}
+
+
 class SLM:
     """Writes a listening reply for a plan chosen by the rules.
 
@@ -354,7 +359,8 @@ class SLM:
         hist = (BOS,) * top
         out, splices = [], []
         for _ in range(max_len):
-            first = im if im and self.rng.random() < self.mix else self.global_model
+            mix = 1.0 if intent in OWN_WORDING else self.mix
+            first = im if im and self.rng.random() < mix else self.global_model
             models = [m for m in (first, self.global_model if first is im else im) if m]
             table = full = joined_from = None
             for model in models:
@@ -408,6 +414,8 @@ class SLM:
         q = sents[-1].split()
         if len(sents) > 2 or any(s.split()[-1] == "?" for s in sents[:-1]):
             return "shape"
+        if any(s.split()[0] in WH for s in sents[:-1]):
+            return "shape"                           # "What's got you curious about it. What ...?"
         if CLOSED_START.match(sents[-1]):
             return "yes-no"                          # "Do you ...?" can be answered with "no"
         if not any(t in WH for t in q):

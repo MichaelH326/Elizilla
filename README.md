@@ -10,9 +10,11 @@ The rules decide **what to listen for**. A small language model (`slm.py`)
 decides **how to say it**: it writes the reply instead of picking a prebuilt
 one. Like [Mira](https://github.com/MichaelH326/Mira), it would rather not
 answer than answer badly. Generated replies have to pass grammar and
-confidence gates, and if none do, a hand-written template is used. It is also
-honest about its limits: it says it can't know the time or weather, doesn't
-guess at facts, and says it can't do tasks.
+confidence gates, and if none do, a hand-written template is used.
+
+It only listens. It never answers questions, does tasks, or says "I don't
+know": it reflects them back ("what is the capital of france?" gets "So
+you're asking about the capital of France. What made you think of it?").
 
 ```bash
 python3 neo_eliza.py           # chat
@@ -139,6 +141,6 @@ file was built from. The chat warns when the file is out of date, and
 ```bash
 python3 test_sections.py        # sentences split into the right sections
 python3 test_open_questions.py  # every reply ends with an open-ended question
-python3 test_slm.py             # SLM gates, generated replies, honesty replies
+python3 test_slm.py             # SLM gates, generated replies, reflected questions
 python3 test_mdlo.py            # .mdlo layout, checksum, round trip, and that elizilla.mdlo is up to date
 ```

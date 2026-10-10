@@ -1,4 +1,4 @@
-"""Checks the SLM writer: its gates, its replies, and the honesty replies."""
+"""Checks the SLM writer: its gates, its replies, and reflected questions."""
 import re
 from neo_eliza import NeoEliza, CLOSED_QUESTION
 from slm import SLM, grammar_problem
@@ -36,13 +36,16 @@ for intent, slots in [("sad", {"describer": "down"}), ("no-time", {"follow": "do
         reply, info = slm.write(intent, slots)
         assert reply and reply.endswith("?") and "<" not in reply, (intent, reply, info)
 
-# Honesty: Mira's contract, carried over.
+# Questions and requests are reflected back, never answered or refused.
 bot = NeoEliza(seed=1)
-for text, rule in [("what time is it?", "cant-know"), ("whats the weather like tomorrow", "cant-know"),
-                   ("what is the capital of france?", "dont-know-fact"),
-                   ("can you write my essay for me", "cant-do")]:
+for text, rule, words in [("what time is it?", "reflect-question", None),
+                          ("whats the weather like tomorrow", "reflect-question", "weather"),
+                          ("what is the capital of france?", "reflect-question", "capital of france"),
+                          ("can you write my essay for me", "reflect-request", "your essay")]:
     reply = bot.respond(text)
     assert bot.last_rule == rule, (text, bot.last_rule, reply)
+    assert not re.search(r"\b(?:i don't know|i can't|i'm not able)\b", reply.lower()), (text, reply)
+    assert words is None or words in reply.lower() or reply.count("?") == 1, (text, reply)
     last = re.split(r"(?<=[.!?])\s+", reply.strip())[-1]
     assert reply.endswith("?") and not CLOSED_QUESTION.match(last), (text, reply)
 
@@ -51,4 +54,4 @@ plain = NeoEliza(seed=1, use_slm=False)
 assert plain.respond("i feel lonely").endswith("?")
 assert plain.last_source.startswith("template")
 
-print("ok: SLM gates, generated replies, and honesty replies")
+print("ok: SLM gates, generated replies, and reflected questions")

@@ -13,7 +13,7 @@ installs, no GPU. It only listens and talks. It doesn't do tasks.
 | Rules written as sections + categories (about 50) | `rules.py` | Done |
 | Engine: scoring, mood, memory, novelty, no-repeat, open-question check | `neo_eliza.py` | Done, tested (`test_open_questions.py`) |
 | Small language model (4-gram, Kneser-Ney) that writes every reply from the rule's plan | `slm.py`, `corpus.txt` | **Connected** (`--no-slm` to turn off), tested (`test_slm.py`) |
-| Mira-style honesty: can't know time/weather, won't guess facts, can't do tasks | `neo_eliza.py` | Done |
+| Questions and requests reflected back, never answered or refused (no "I don't know") | `neo_eliza.py` | Done, tested (`test_slm.py`) |
 | Packed model in Mira's `.mdlo` container (v2 layout, `"engine": "ngram-kn"`) | `mdlo.py`, `elizilla.mdlo` | Done, tested (`test_mdlo.py`) |
 
 ### What the SLM does today
