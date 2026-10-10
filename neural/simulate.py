@@ -8,6 +8,7 @@ topic change, coming back to something earlier) and casual texting noise.
 """
 
 import argparse
+import math
 import json
 import random
 import re
@@ -69,14 +70,13 @@ def voice(line, rng, style):
     return text
 
 
-def conversation(profile, others, rng):
+def conversation(profile, others, rng, behaviours):
     style = {"typos": rng.random() < 0.4, "no_apostrophes": rng.random() < 0.6,
              "slang": rng.random() < 0.4, "caps": rng.random() < 0.25, "punct": rng.random() < 0.3}
     about = profile.get("about") or "that"
     lines = profile["lines"][:]
     keep = rng.randint(min(4, len(lines)), min(10, len(lines)))
     body = [lines[0]] + sorted(rng.sample(lines[1:], keep - 1), key=lines.index)
-    behaviours = [b for b, p in SCHEDULE.items() if rng.random() < p]
 
     def at(pos_lo=1):
         return rng.randint(min(pos_lo, len(body)), len(body))
@@ -122,11 +122,19 @@ def conversation(profile, others, rng):
 
 def simulate(profiles, per_profile, seed=0):
     rng = random.Random(seed)
-    out = []
+    total = len(profiles) * per_profile
+    # Exact quotas, not coin flips: each behaviour lands in exactly its share
+    # of conversations, so even a small build covers every one.
+    plan = [[] for _ in range(total)]
+    for b, share in SCHEDULE.items():
+        for i in rng.sample(range(total), min(total, max(1, math.ceil(share * total)))):
+            plan[i].append(b)
+    out, n = [], 0
     for prof in profiles:
         others = [p for p in rng.sample(profiles, min(5, len(profiles))) if p["situation"] != prof["situation"]]
         for k in range(per_profile):
-            user, behaviours = conversation(prof, others, rng)
+            user, behaviours = conversation(prof, others, rng, plan[n])
+            n += 1
             out.append({"id": f"{prof['id']}/{k}", "profile": prof["id"], "situation": prof["situation"],
                         "area": prof["area"], "held_out": prof["held_out"], "source": prof["source"],
                         "behaviours": behaviours, "user": user})
