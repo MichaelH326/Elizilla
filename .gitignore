@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 .DS_Store
 eval_slm_sheet.tsv
+neural/.selftest.lock
+models/
+data/
+elizilla-hf/
+*.gguf
+elizilla-neural.mdlo
+review.tsv

@@ -1,0 +1,84 @@
+name: Neural smoke test (whole pipeline, tiny scale)
+
+# Runs every step of the neural Elizilla pipeline at tiny scale so breakage
+# shows up in ~20 minutes instead of after hours of training:
+# tests -> baseline eval -> dataset -> real teacher on 2 situations ->
+# 2-step fine-tune -> package .mdlo -> tag -> chat selftest -> eval.
+# Run it by hand (Actions tab) before a real training run.
+
+on:
+  workflow_dispatch:
+
+env:
+  PYTHONUNBUFFERED: "1"
+  MIRA_COMMIT: b4ce45cccacdb7cf104fb683ef93d4a07f5d5854
+  ELIZILLA_LOCK: ${{ github.workspace }}/.ci-crisis.lock
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: MichaelH326/Mira
+          ref: ${{ env.MIRA_COMMIT }}
+          path: mira
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install transformers peft sentencepiece gguf protobuf numpy huggingface_hub llama-cpp-python
+
+      - name: Elizilla tests
+        run: for t in test_safety test_mdlo test_slm test_sections test_open_questions; do python $t.py; done
+
+      - name: Baseline eval (rule-based Elizilla)
+        run: python neural/eval_neural.py
+
+      - name: Dataset builds (stand-in teacher)
+        run: python neural/make_dataset.py --teacher fake --per-situation 1 --per-profile 1 --out-dir data
+
+      - name: Real teacher works (2 situations, smallest teacher)
+        run: |
+          T=$(python neural/get_teacher.py smollm2-1.7b --out models | tail -1)
+          python neural/profiles.py --teacher "$T" --limit 2 --per-situation 1 --out t_profiles.jsonl
+          python neural/simulate.py t_profiles.jsonl --per-profile 1 --out t_people.jsonl
+          python neural/build.py t_people.jsonl --teacher "$T" --out t_built.jsonl
+          head -c 2000 t_profiles.jsonl; echo; head -c 3000 t_built.jsonl
+
+      - name: Fine-tune 2 steps
+        run: |
+          python mira/voice/finetune_mira.py --base HuggingFaceTB/SmolLM2-135M-Instruct \
+            --data data/neural_data.jsonl --out elizilla-hf --steps 2 --save_every 1
+
+      - name: Package and tag
+        run: |
+          git clone --depth 1 https://github.com/ggml-org/llama.cpp.git
+          python mira/voice/package_mdlo.py --model elizilla-hf --out elizilla-neural.mdlo \
+            --llama_cpp llama.cpp --quant q8_0 --base_model HuggingFaceTB/SmolLM2-135M-Instruct \
+            --finetune_steps 2 --system_prompt "$(python -c 'from mdlo import PERSONA; print(PERSONA)')"
+          python neural/tag_mdlo.py elizilla-neural.mdlo --card data/dataset_card.json
+
+      - name: Chat selftest
+        run: python neural/run_neural.py --model elizilla-neural.mdlo --selftest
+
+      # Report only: a 2-step model isn't expected to score well; this proves
+      # the eval runs on a real packaged model.
+      - name: Eval runs on the packaged model
+        run: python neural/eval_neural.py --system elizilla --system elizilla-neural.mdlo --json report.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-report
+          path: |
+            report.json
+            data/dataset_card.json
+            t_built.jsonl

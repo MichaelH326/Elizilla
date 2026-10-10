@@ -171,6 +171,20 @@ python3 mdlo.py info elizilla.mdlo    # print the header
 file was built from. The chat warns when the file is out of date, and
 `test_mdlo.py` fails until you repack.
 
+## Neural Elizilla (in progress)
+
+`neural/` holds the pipeline for training a small neural model that talks
+like Elizilla and adapts to new situations: training-data builder, eval,
+packaging and a runner. Plans: [NEURAL_PLAN.md](NEURAL_PLAN.md),
+[DATA_PLAN.md](DATA_PLAN.md).
+
+```bash
+python3 neural/eval_neural.py                                 # score rule-based Elizilla (baseline)
+python3 neural/make_dataset.py --teacher fake --out-dir /tmp/neural   # build training data locally
+```
+
+Training runs on GitHub Actions (`neural-smoke.yml`, then `neural-train.yml`).
+
 ## Tests
 
 ```bash

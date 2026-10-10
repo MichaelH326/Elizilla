@@ -1,0 +1,203 @@
+name: Train neural Elizilla
+
+# Full run: teacher-written profiles (parallel) -> simulated people ->
+# Elizilla + teacher replies (parallel) -> clean -> fine-tune -> package
+# elizilla-neural.mdlo -> eval against rule-based Elizilla.
+# See DATA_PLAN.md and NEURAL_PLAN.md. On a private repository every job
+# minute counts against the account's Actions allowance; total minutes are
+# roughly shards x teacher hours + training time.
+
+on:
+  workflow_dispatch:
+    inputs:
+      teacher:
+        description: "Teacher for profiles and weak turns (none = templates and Elizilla only)"
+        type: choice
+        default: phi-3.5-mini
+        options: [none, smollm2-1.7b, phi-3.5-mini, qwen2.5-7b]
+      shards:
+        description: "Parallel teacher jobs (each up to ~5.5 h)"
+        default: "4"
+      per_situation:
+        description: "Profiles per situation"
+        default: "2"
+      per_profile:
+        description: "Conversations per profile"
+        default: "4"
+      base_model:
+        description: "Model to fine-tune"
+        type: choice
+        default: HuggingFaceTB/SmolLM2-360M-Instruct
+        options: [HuggingFaceTB/SmolLM2-135M-Instruct, HuggingFaceTB/SmolLM2-360M-Instruct, Qwen/Qwen2.5-0.5B-Instruct]
+      steps:
+        description: "Fine-tune steps"
+        default: "400"
+      quant:
+        description: "q8_0 (no build step) or Q4_K_M (smaller)"
+        default: q8_0
+      publish:
+        description: "Publish as a GitHub Release (only if you've reviewed the eval)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+env:
+  PYTHONUNBUFFERED: "1"
+  MIRA_COMMIT: b4ce45cccacdb7cf104fb683ef93d4a07f5d5854
+  ELIZILLA_LOCK: ${{ github.workspace }}/.ci-crisis.lock
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.s.outputs.shards }}
+      n: ${{ steps.s.outputs.n }}
+    steps:
+      - id: s
+        run: |
+          N=${{ inputs.teacher == 'none' && '1' || inputs.shards }}
+          echo "n=$N" >> "$GITHUB_OUTPUT"
+          echo "shards=$(python3 -c "import json; print(json.dumps(list(range($N))))")" >> "$GITHUB_OUTPUT"
+
+  profiles:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: ${{ fromJSON(needs.setup.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - if: inputs.teacher != 'none'
+        run: pip install llama-cpp-python huggingface_hub
+      - if: inputs.teacher != 'none'
+        uses: actions/cache@v4
+        with:
+          path: models
+          key: teacher-${{ inputs.teacher }}
+      - name: Profiles
+        run: |
+          T=none
+          if [ "${{ inputs.teacher }}" != "none" ]; then T=$(python neural/get_teacher.py ${{ inputs.teacher }} --out models | tail -1); fi
+          python neural/profiles.py --teacher "$T" --per-situation ${{ inputs.per_situation }} \
+            --shard ${{ matrix.shard }} --shards ${{ needs.setup.outputs.n }} --out profiles-${{ matrix.shard }}.jsonl
+      - uses: actions/upload-artifact@v4
+        with: {name: "profiles-${{ matrix.shard }}", path: "profiles-${{ matrix.shard }}.jsonl"}
+
+  build:
+    needs: [setup, profiles]
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: ${{ fromJSON(needs.setup.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - if: inputs.teacher != 'none'
+        run: pip install llama-cpp-python huggingface_hub
+      - if: inputs.teacher != 'none'
+        uses: actions/cache@v4
+        with:
+          path: models
+          key: teacher-${{ inputs.teacher }}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "profiles-*", merge-multiple: true, path: parts}
+      - name: Simulate and build
+        run: |
+          cat $(ls parts/profiles-*.jsonl | sort -V) > profiles.jsonl
+          python neural/simulate.py profiles.jsonl --per-profile ${{ inputs.per_profile }} --out people.jsonl
+          T=none
+          if [ "${{ inputs.teacher }}" != "none" ]; then T=$(python neural/get_teacher.py ${{ inputs.teacher }} --out models | tail -1); fi
+          python neural/build.py people.jsonl --teacher "$T" --shard ${{ matrix.shard }} \
+            --shards ${{ needs.setup.outputs.n }} --out built-${{ matrix.shard }}.jsonl
+      - uses: actions/upload-artifact@v4
+        with: {name: "built-${{ matrix.shard }}", path: "built-${{ matrix.shard }}.jsonl"}
+
+  dataset:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "built-*", merge-multiple: true, path: parts}
+      - name: Clean, check and export
+        run: |
+          mkdir -p data
+          python neural/clean.py parts/built-*.jsonl --out data/clean.jsonl --card data/dataset_card.json
+          python neural/export.py data/clean.jsonl --out data/neural_data.jsonl --val-out data/neural_data_val.jsonl
+          python neural/review.py sheet data/clean.jsonl --n 200 --out data/review.tsv
+          python -c "import json; c=json.load(open('data/dataset_card.json')); c['teacher']='${{ inputs.teacher }}'; json.dump(c, open('data/dataset_card.json','w'), indent=1)"
+          cat data/dataset_card.json | head -60
+      - uses: actions/upload-artifact@v4
+        with: {name: dataset, path: data}
+
+  train:
+    needs: dataset
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: MichaelH326/Mira
+          ref: ${{ env.MIRA_COMMIT }}
+          path: mira
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install transformers peft sentencepiece gguf protobuf numpy llama-cpp-python
+      - uses: actions/download-artifact@v4
+        with: {name: dataset, path: data}
+      - uses: actions/cache@v4
+        with:
+          path: elizilla-hf/ckpt
+          key: neural-ckpt-${{ inputs.base_model }}-${{ hashFiles('data/neural_data.jsonl') }}-${{ github.run_id }}
+          restore-keys: neural-ckpt-${{ inputs.base_model }}-${{ hashFiles('data/neural_data.jsonl') }}-
+      - name: Fine-tune
+        run: |
+          python mira/voice/finetune_mira.py --base ${{ inputs.base_model }} --data data/neural_data.jsonl \
+            --out elizilla-hf --steps ${{ inputs.steps }} --loss_on assistant --resume --max_minutes 240
+      - name: Package and tag
+        run: |
+          git clone --depth 1 https://github.com/ggml-org/llama.cpp.git
+          if [ "${{ inputs.quant }}" != "q8_0" ]; then
+            cmake -S llama.cpp -B llama.cpp/build -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+            cmake --build llama.cpp/build --target llama-quantize -j"$(nproc)"
+            Q="--quantize_bin llama.cpp/build/bin/llama-quantize"
+          fi
+          python mira/voice/package_mdlo.py --model elizilla-hf --out elizilla-neural.mdlo --llama_cpp llama.cpp \
+            --quant ${{ inputs.quant }} $Q --base_model ${{ inputs.base_model }} --finetune_steps ${{ inputs.steps }} \
+            --system_prompt "$(python -c 'from mdlo import PERSONA; print(PERSONA)')"
+          python neural/tag_mdlo.py elizilla-neural.mdlo --card data/dataset_card.json
+      - name: Eval against rule-based Elizilla
+        run: |
+          python neural/eval_neural.py --system elizilla --system elizilla-neural.mdlo --json report.json --show fail
+          python neural/tag_mdlo.py elizilla-neural.mdlo --card data/dataset_card.json --eval report.json
+          python neural/run_neural.py --model elizilla-neural.mdlo --selftest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: elizilla-neural
+          path: |
+            elizilla-neural.mdlo
+            report.json
+            data/dataset_card.json
+            data/review.tsv
+      - name: Publish release
+        if: inputs.publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "neural-${{ github.run_number }}" elizilla-neural.mdlo report.json \
+            --title "Neural Elizilla (run ${{ github.run_number }})" \
+            --notes "Base ${{ inputs.base_model }}, ${{ inputs.steps }} steps, teacher ${{ inputs.teacher }}. See report.json."

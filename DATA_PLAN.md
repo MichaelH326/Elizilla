@@ -39,14 +39,13 @@ situation map ──► teacher writes        ──► code multiplies        �
 
 ---
 
-## Step 1: the situation map (`neural/situations.json`)
+## Step 1: the situation map (`neural/situations.txt`)
 
 A hand-curated tree: **area → specific situation**, with tags.
 
-```json
-{"id": "school/exam-tomorrow", "area": "everyday/school",
- "moods": ["anxious", "tired"], "people": ["teacher", "friend"],
- "held_out": false}
+```
+## school
+exam-tomorrow | i have a chemistry exam tomorrow | my chemistry exam | anxious
 ```
 
 - About 12 areas × ~200 situations each, roughly 2,500 situations in total.
@@ -235,23 +234,31 @@ merges, cleans, balances and checks.
 If the benchmark is slower than assumed: use the 1.7B teacher for profiles
 (simpler job) and the 3.8B one for replies only, or reduce to 3,000 profiles.
 
-## Where it lives
+## Where it lives (built)
 
 ```
 neural/
-  situations.json      # Step 1, hand-edited
-  profiles.py          # Step 2a: teacher → profiles (CI)
-  simulate.py          # Step 2b: multiply + behaviour schedule
-  build.py             # Step 3: run NeoEliza, fill weak turns, mirror backup
-  checks.py            # Step 4: shared with the eval
-  clean.py             # Step 5: dedupe, balance, leakage, crisis
-  review.py            # Step 6: makes and reads the rating sheet
-  make_dataset.py      # runs 2b → 7 end to end
-.github/workflows/build-data.yml   # benchmark, matrix generation, merge
+  situations.txt / .py  # Step 1: 185 hand-written situations, 15% held out per area
+  teacher.py            # the teacher (llama.cpp), plus a stand-in for tests
+  get_teacher.py        # downloads a teacher GGUF from Hugging Face
+  profiles.py           # Step 2a: teacher (or templates) -> profiles; --shard for CI
+  simulate.py           # Step 2b: profiles -> conversations, behaviour schedule, texting noise
+  build.py              # Step 3: real NeoEliza replies; teacher fills weak turns; mirror backup
+  mirror.py             # always-grammatical backup replies
+  checks.py             # Step 4: shared with the eval
+  clean.py              # Step 5: dedupe, balance, leakage, crisis; fails the build on problems
+  review.py             # Step 6: rating sheet and scoring
+  export.py             # Step 7: Mira JSONL + validation split by profile
+  make_dataset.py       # runs it all in one process
+  eval_set.py / eval_neural.py   # the eval (NEURAL_PLAN.md Phase 0) and baseline_report.json
+  chat_model.py / run_neural.py  # run a trained .mdlo, with safety.py in front
+  tag_mdlo.py           # names the packaged model and declares the crisis lock
+.github/workflows/neural-smoke.yml   # whole pipeline at tiny scale (~20 min)
+.github/workflows/neural-train.yml   # the real run: parallel teacher shards, train, package, eval
 ```
 
-Everything except the teacher calls is plain Python and runs locally in
-minutes, so it can be built and tested before spending any CI time.
+`python3 neural/make_dataset.py --teacher fake --out-dir /tmp/neural` runs the
+whole data pipeline locally in about a minute with a stand-in teacher.
 
 ## If you'd rather not use a teacher model
 
