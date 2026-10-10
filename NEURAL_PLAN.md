@@ -1,244 +1,212 @@
-# Neuralization Plan: Elizilla as a standalone neural model
+# Neural Plan: an SLM that turns what you said into a question
 
-Goal: a single `elizilla.mdlo` (MDLO v2, `"engine": "gguf"`) that listens the
-way Elizilla does and runs in any GGUF runtime (Mira's `run_mira.py`,
-llama.cpp, Ollama, LM Studio) with **none of Elizilla's Python code**.
+**Research question:** can a small language model, trained on a laptop CPU or
+a free CI runner, listen to what someone says and repeat it back as a good
+question, well enough to hold a conversation?
 
-The research question stays the same: can a small model have and hold a
-conversation? The neural version is a second way of answering it, not a step
-towards a therapy or support product.
-
-How: use today's rule-based Elizilla as a **teacher**. It writes thousands of
-example conversations, a small open model is fine-tuned on them with Mira's
-existing pipeline, and the result is packaged the same way `mira.mdlo` is.
-This is called distillation.
-
-The plan is built so it can't quietly go wrong: the tests come before the
-training, every phase has a gate that must pass before the next starts, and
-the rule-based Elizilla stays in place until the neural one beats it.
+Elizilla is a conversation experiment, not a therapist or a support service.
+Nothing here changes that.
 
 ---
 
-## The trade-off, stated up front
+## 1. The task, defined exactly
 
-| | Rule-based Elizilla (today) | Neural Elizilla |
+**Input:** what the person just said (plus, in later stages, the last two
+turns).
+
+**Output:** one short, open-ended question that **repeats the person's own
+words**, with the point of view flipped (I → you, my → your), and adds
+nothing of its own: no answers, no advice, no "I don't know".
+
+| Person says | Good output | Why |
 |---|---|---|
-| Runs with | Python, no installs | Any GGUF runtime; no Elizilla code |
-| File size | 97 KB | about 250–400 MB (360M model, 4- to 8-bit) |
-| Understands new phrasings | Only words in its lists | Yes, from the base model's English |
-| "Always ends with an open question" | Guaranteed by code | Learned: measured, not guaranteed |
-| Crisis route + lock | Guaranteed by code (`safety.py`) | Still guaranteed: the same `safety.py` runs before the model (Decision 1) |
-| Training | 0.05 s | Hours on a GitHub Actions CPU runner |
+| i dont have time to do my homework | What's keeping you from having time to do your homework? | Their words, flipped, open question |
+| my mom is always on my case | What makes it feel like your mom is always on your case? | Repeats the whole clause |
+| i think my boss hates me | What makes you think your boss hates you? | |
+| i love playing guitar | What do you love most about playing guitar? | |
+| im so stressed about my exams | What about your exams is making you so stressed? | |
+| what is the capital of france? | What made you think about the capital of France? | Reflected, not answered |
 
-## Decisions
+| Bad output | Problem |
+|---|---|
+| Do you not have time for homework? | Yes/no question; conversation stops at "yes" |
+| Why don't you make a schedule? | Advice |
+| What's keeping you from having time to do my homework? | Point of view not flipped |
+| How is school going? | Doesn't repeat what they said |
+| Paris. What made you ask? | Answered the question |
 
-1. **Crisis safety is never left to the model.** Decided: any talk of suicide,
-   self-harm or harming others gets the route crisis professionals advise
-   (988, Crisis Text Line, 911) and locks the bot for good. The check and the
-   lock live in `safety.py`, which every runner must call *before* the model
-   sees the message. The model never answers a crisis message and is never
-   trained to. Its training data includes none, so it can't learn a weaker
-   copy of the route. The `.mdlo` header carries `"safety": {"crisis_lock":
-   true}`, and a runner that can't honour it must refuse to load the file.
-2. **Base model.** Recommended: `HuggingFaceTB/SmolLM2-360M-Instruct`
-   (Apache-2.0, fits a single 6-hour CI run, what Mira already uses). Step up
-   to `Qwen2.5-0.5B-Instruct` only if the eval in Phase 6 falls short.
-Decided: Elizilla only reflects. It never answers questions, never does
-tasks, and never says "I don't know" or "I can't". The base model *knows*
-the capital of France, so the training data must teach it to reflect such
-questions back instead ("So you're asking about the capital of France. What
-made you think of it?"). C5–C7 below check this.
+This narrow task is the heart of Elizilla, and it's mostly **copying with a
+twist** (flip pronouns, wrap in a question frame). That makes it a fair test
+of what a *very* small model can learn.
 
----
+## 2. Two models, one dataset, one eval
 
-## Phase 0: Write the contract as tests (before any data or training)
+The research is more useful if it compares sizes, so the plan trains two
+models on the same data and scores them with the same eval:
 
-Everything later is judged against this. Each line becomes an automatic check
-in `neural/eval_neural.py`.
+| | Model A: tiny, from scratch | Model B: small, fine-tuned |
+|---|---|---|
+| Recipe | Mira v1 (`mira/train.py`): character-level transformer trained from nothing | Mira v2 (`voice/finetune_mira.py`): LoRA fine-tune of a pretrained model |
+| Size | ~0.8M–2.7M parameters (`tiny`/`small` presets) | `SmolLM2-135M-Instruct` first, `SmolLM2-360M-Instruct` if needed |
+| Knows English beforehand | No: everything comes from our data | Yes |
+| Training | ~40 min–3 h on a laptop CPU | A few hours on a GitHub Actions CPU runner |
+| File | MDLO v1, about 3–11 MB | MDLO v2 GGUF, about 100–400 MB |
+| Runs with | PyTorch (`mira/assistant.py`) | llama.cpp / Ollama / `run_mira.py` |
+| Answers | Can a model *this* small do it at all? | How good does it get with real English underneath? |
 
-| # | Behaviour | Check | Target |
+Both are compared against a third, free baseline: **the rule-based mirror**
+(Elizilla's parser + `reflect()` + a question frame, no learning at all). If
+neither model beats the rules on new phrasings, that's a result too.
+
+Why character-level for Model A: copying an unfamiliar word ("my
+*ukulele* teacher") is spelling it out letter by letter, so a char model can
+in principle copy words it has never seen. That's exactly the
+generalization this research is about.
+
+## 3. Phase 0: the eval comes first
+
+Write `reflect/eval_reflect.py` and `reflect/eval_set.jsonl` (about 400
+hand-written messages) **before** any training, and run it on the
+rule-based mirror to get baseline numbers.
+
+| # | Metric | How it's measured | Target |
 |---|---|---|---|
-| C1 | Ends with an open-ended question | last sentence ends in `?` and isn't a yes/no question | ≥ 98% |
-| C2 | Short and spoken | ≤ 2 sentences, ≤ 35 words, no lists, markdown or emoji | ≥ 98% |
-| C3 | Uses the person's words | reply contains the topic word or describer from the message | ≥ 70% |
-| C4 | Crisis route + lock on crisis language (via `safety.py`, not the model) | full advised message, then every later message locked | 100% |
-| C5 | Reflects questions about the world (time, weather, facts) | repeats what was asked in the person's words; gives no answer | ≥ 95% |
-| C6 | Never says it doesn't know or can't | no "I don't know", "I can't", "I'm not able", "as an AI" | ≥ 99% |
-| C7 | Reflects requests instead of doing them | "You want someone to write your essay…"; doesn't write it | ≥ 95% |
-| C8 | No advice | no "you should", "try to", "have you considered" | ≥ 95% |
-| C9 | Reacts to mood | low mood gets a gentle reaction, good news a warm one | ≥ 80% (rated) |
-| C10 | Uses earlier turns | refers back to something said 2+ turns ago when relevant | ≥ 60% |
-| C11 | No repeats | never repeats its own earlier reply in a conversation | ≥ 98% |
+| R1 | Open question | ends in "?", one question, not yes/no | ≥ 98% |
+| R2 | Repeats their words | share of the message's content words (reflected) found in the output | mean ≥ 0.6 |
+| R3 | Point of view flipped | no "I / my / me" carried over from the person's side | ≥ 97% |
+| R4 | Grammatical | hand-rated sample of 100 | ≥ 90% |
+| R5 | Adds nothing | no answers, advice, or "I don't know / I can't" | ≥ 99% |
+| R6 | **New words** | R2 + R3 on messages full of words in no training example (rare hobbies, names, slang) | ≥ 85% of R2/R3 scores on known words |
+| R7 | **Holds a conversation** | sessions with real people: median turns before they stop, % of turns where they had to repeat themselves | Reported, compared across models |
 
-**Gate 0:** run the eval on the *current* rule-based Elizilla (wrap it with
-the same interface). Its scores become the baseline the neural model must
-match or beat. If Elizilla itself misses a target, fix Elizilla first: the
-student can't learn what the teacher doesn't do.
+R6 and R7 answer the research question. R1–R5 make sure the outputs are the
+right kind of thing.
 
-The eval set (about 300 scenarios) is written by hand and kept in
-`neural/eval_scenarios.jsonl`. **It is never shown to the dataset generator**
-(see Phase 1, leakage).
+The eval set is split so its messages, and the special words used in R6,
+**never** appear in training (checked automatically).
 
-## Phase 1: Teacher dataset generator (`neural/make_dataset.py`, pure Python)
+**Gate 0:** eval runs on the rule-based mirror and produces a baseline report.
 
-Output: JSONL in exactly Mira's format, so Mira's scripts take it unchanged:
+## 4. Phase 1: the dataset (`reflect/make_pairs.py`, plain Python)
 
-```json
-{"messages": [{"role": "system", "content": "<PERSONA from mdlo.py>"},
-              {"role": "user", "content": "my mom is always on my case"},
-              {"role": "assistant", "content": "What's it like at home with your mom right now?"},
-              ...]}
-```
+Training pairs: *(what the person said → reflected question)*.
 
-Steps:
+1. **Messages.** Build 30,000+ distinct messages: sentence frames × every word
+   in `lexicon.py` × casual variation (lowercase, missing apostrophes, typos,
+   slang, run-ons, filler like "idk", "honestly"). Hand-write ~300 more that
+   sound like real people, to check the frames aren't too uniform.
+2. **Targets, three sources, all checked:**
+   - **Mirror frames** (always correct): flip the clause with `reflect()` and
+     wrap it: "What makes you say {clause}?", "What's it like when
+     {clause}?", "How long have you felt that {clause}?". There are about 30
+     frames, chosen by clause type (feeling, wanting, liking, a person doing
+     something, a question about the world).
+   - **Elizilla's rules + SLM**, kept only when the output passes R1, R3, R5
+     and copies enough (R2 ≥ 0.6).
+   - **Hand-written** targets for the ~300 hand-written messages.
+3. **2–3 targets per message**, so the model learns a style, not one fixed
+   sentence per input.
+4. **Formats**, both from the same pairs:
+   - Model A: Mira v1 stream: `<|u|>message<|m|>question<|e|>`.
+   - Model B: Mira v2 JSONL: `{"messages": [system, user, assistant]}`.
+5. **Kept out:** anything about suicide, self-harm or harming others (that
+   goes through `safety.py`, never the model); every eval message and R6 word.
+6. **`dataset_card.json`:** counts per frame and source, the seed, and the
+   SHA-256 of `lexicon.py`, `rules.py`, `corpus.txt` and the generator.
 
-1. **Varied user messages.** Combine sentence frames ("i feel {adj}", "my {person}
-   {does something}", "i dont have time to {task}") with every word in
-   `lexicon.py`, plus misspellings, slang, missing apostrophes, lowercase,
-   run-ons, and one-word replies ("idk", "nah"). Target: 30,000+ distinct
-   messages. Hand-write about 200 messages that sound like real people, as a
-   check that the frames aren't too uniform.
-2. **Multi-turn conversations.** A simple simulated user picks a situation
-   (stress about exams, a fight with a friend, good news...) and answers
-   Elizilla's questions with follow-up frames. 2 to 8 turns each. This
-   teaches C10 and C11, which single exchanges can't.
-3. **Teacher replies.** Run `NeoEliza` on each conversation with the SLM on
-   and stricter gates (`samples=80`, a higher confidence threshold). Keep a
-   reply only if:
-   - it came from the SLM or a template **and** passes every C-check above;
-   - it isn't a known-bad pattern (keep a deny list, grown from Phase 2's
-     hand rating).
-   Drop the whole conversation if any turn fails, so no bad turn is learned.
-4. **Fixed behaviours.** Add the reflection cases on purpose, so they're not
-   left to chance: 6% questions about the world (time, weather, facts) and 3%
-   task requests, each with many phrasings and each reflected back, never
-   answered. Crisis messages are **left out** entirely: `safety.py` handles
-   them before the model is ever called (Decision 1).
-5. **Variety.** Generate 2–3 different replies per message with different
-   seeds, so the model learns a style, not one sentence per input.
-6. **No leakage.** Before writing, drop any conversation whose user turns are
-   within a small edit distance of any eval scenario.
-7. **Reproducible.** Fixed seed; write `dataset_card.json` with counts per
-   behaviour, the seed, and the SHA-256 of `corpus.txt`, `rules.py` and
-   `lexicon.py`.
+**Gate 1:**
+- every target passes R1, R3, R5 automatically;
+- ≥ 15% unique targets (Mira's `validate_dataset.py` rule);
+- zero overlap with the eval set;
+- hand rating of 200 random pairs: ≤ 5% bad. Each bad pattern becomes a
+  filter, then regenerate.
 
-Target: 20,000–40,000 conversations (Mira's open dataset uses 40,000).
-
-**Gate 1:** all of these pass, automatically:
-- Mira's `voice/validate_dataset.py` (English only, no markdown, reply
-  length, ≥ 15% unique replies).
-- Elizilla's checks: every assistant turn passes C1, C2, C8; behaviour mix
-  within ±1% of the targets in step 4; zero eval leakage.
-- **Hand rating:** a random 200 assistant turns rated good / ok / bad, with
-  ≤ 5% bad. Every "bad" becomes a deny-list entry or a gate, then regenerate.
-
-## Phase 2: Fix the teacher where the data shows it's weak
-
-The hand rating in Gate 1 will show patterns the rules handle poorly (today,
-for example, "i miss my grandpa he died" picks the wrong rule). Fix those in
-`rules.py`, `lexicon.py` or `corpus.txt`, regenerate, and re-run Gate 1. The
-student is only as good as the teacher.
-
-## Phase 3: Training setup in this repo
-
-- `.github/workflows/train-neural.yml`: a copy of Mira's
-  `train-mira-voice.yml`, changed to:
-  1. check out Mira at a **pinned commit** (to reuse `finetune_mira.py`,
-     `package_mdlo.py` and `validate_dataset.py` without copying them);
-  2. build the dataset with `neural/make_dataset.py`;
-  3. run Gate 1's automatic checks (and stop if they fail);
-  4. fine-tune, package, run the eval, and upload the result as an artifact
-     (not a release until Gate 6 passes).
-- Keep Mira's checkpoint cache, so a run that hits the 6-hour limit resumes.
-- Pass Elizilla's persona as `--system_prompt` to both training and packaging,
-  so the model runs with exactly the prompt it was trained with.
-
-**Gate 3:** a smoke run (200 conversations, 2 steps) goes end to end in under
-15 minutes and produces an `.mdlo` that loads and replies.
-
-## Phase 4: Fine-tune
+## 5. Phase 2: train Model A (tiny, from scratch)
 
 ```bash
-python mira/voice/finetune_mira.py \
-    --base HuggingFaceTB/SmolLM2-360M-Instruct \
-    --data neural_data.jsonl --out elizilla-hf \
-    --steps 400 --loss_on assistant
+python -m mira.train --data reflect_stream.txt --preset tiny \
+    --max-iters 4000 --out checkpoints/reflect-tiny
 ```
 
-- LoRA (Mira's defaults: r 16, alpha 32, learning rate 1e-4).
-- Loss only on Elizilla's replies (`--loss_on assistant`), so training goes
-  into how it responds, not into memorizing the persona or the user lines.
-- Hold out 5% of the dataset; stop early if the held-out loss rises (it's
-  starting to memorize).
+- Start with `tiny` (~0.8M); try `small` (~2.7M) only if R2/R3 fall short.
+- Keep 5% of the pairs as a validation set; stop when validation loss stops
+  improving (memorizing).
+- Greedy decoding plus Mira's confidence gate: a low-confidence reply falls
+  back to the rule-based mirror, and the fallback rate is reported.
+- Package as MDLO v1 (raw tensors + char tokenizer).
 
-## Phase 5: Package
+**Gate 2:** eval report for Model A next to the baseline.
+
+## 6. Phase 3: train Model B (fine-tuned)
 
 ```bash
-python mira/voice/package_mdlo.py --model elizilla-hf --out elizilla-neural.mdlo \
-    --quant Q4_K_M --system_prompt "<PERSONA>" \
-    --base_model HuggingFaceTB/SmolLM2-360M-Instruct --finetune_steps 400
+python mira/voice/finetune_mira.py --base HuggingFaceTB/SmolLM2-135M-Instruct \
+    --data reflect_pairs.jsonl --out reflect-hf --steps 400 --loss_on assistant
+python mira/voice/package_mdlo.py --model reflect-hf --out elizilla-reflect.mdlo \
+    --quant Q8_0 --system_prompt "<persona from mdlo.py>"
 ```
 
-Produces an MDLO v2 file with `"engine": "gguf"`. It runs with
-`python mira/voice/run_mira.py --model elizilla-neural.mdlo`, or unwrap the
-GGUF payload and run it in llama.cpp or Ollama.
+- 135M first: it's the smallest model that knows English, and the task is
+  narrow. Move to 360M only if Gate 3 fails.
+- Same system prompt for training and packaging.
+- A GitHub Actions workflow, adapted from Mira's `train-mira-voice.yml`,
+  checks out Mira at a pinned commit (currently `b4ce45c`), builds the data,
+  runs Gate 1, trains, packages and runs the eval. It uploads the result as
+  an artifact; it only publishes a release after Gate 3.
 
-Name it `elizilla-neural.mdlo` so it never overwrites the rule-based
-`elizilla.mdlo` (`"engine": "ngram-kn"`).
+**Gate 3:** eval report for Model B next to Model A and the baseline.
 
-## Phase 6: Evaluate against the teacher (acceptance gate)
+## 7. Phase 4: conversations with people (R7)
 
-Run `neural/eval_neural.py` on the held-out scenarios for both models.
+1. Wire both models into the chat as `neo_eliza.py --reflect-model FILE`: the
+   rules still pick *when* to reflect, and the model writes the question.
+   `safety.py` runs first on every message, as it does now.
+2. Run short sessions (10–15 minutes) with a handful of people who know it's
+   an experiment. Log only turn counts and breakdown markers, not what they
+   said, unless they explicitly agree.
+3. Report median turns per session, % of turns where the person repeated
+   themselves or gave a one-word answer, and how often the model's question
+   was rated "made sense" (asked after the session).
 
-**Gate 6, the neural model ships only if all of these hold:**
-- every C-target in Phase 0 is met;
-- on C1–C8 it is no more than 2 points below the teacher;
-- on a blind side-by-side of 100 conversations (rater doesn't know which
-  model wrote which), it is preferred or tied ≥ 50% of the time;
-- 20 messages with words *not* in `lexicon.py` (new slang, rare jobs or
-  hobbies): it scores better than the teacher. This is the main reason to
-  neuralize; if it doesn't win here, it isn't worth the size.
+## 8. Phase 5: write it up
 
-If it fails: look at which C-checks failed, add or fix data for exactly those
-behaviours (Phase 1), and retrain. Change only one thing per retrain (data,
-steps or base model) so the cause of any change is clear.
-
-## Phase 7: Ship
-
-- Publish `elizilla-neural.mdlo` as a GitHub Release (it's too big for the repo).
-- Add `neural/run_neural.py`: a tiny runner that calls `safety.py` on every
-  message first (crisis route + lock, Decision 1) and otherwise just passes
-  turns to the model. It refuses to start while the lock is set.
-- README: how to run it, its eval scores next to the teacher's, and the
-  limits (learned behaviour, not guaranteed).
-- The rule-based Elizilla stays: it's the teacher, the fallback, and the
-  no-install option.
+`reflect/RESULTS.md`: all three systems side by side on R1–R7, examples of
+good and bad outputs, what failed and why, and the honest answer to the
+research question.
 
 ---
 
-## What could go wrong, and what catches it
+## Safety (fixed, not optional)
+
+- `safety.py` checks every message **before** any model sees it. A crisis
+  message gets the advised route and locks the bot. This works the same
+  with or without a model.
+- No crisis content in any training data, so no model learns a weaker version.
+- Every `.mdlo` header declares `"safety": {"crisis_lock": true}`. A runner
+  that can't honour it must refuse to load the file.
+
+## Risks and what catches them
 
 | Risk | What catches it |
 |---|---|
-| Teacher's bad replies get learned | Strict gates, deny list, hand rating in Gate 1 |
-| Model memorizes instead of generalizing | ≥ 15% unique replies, 2–3 replies per message, held-out loss, unknown-word test in Gate 6 |
-| Model starts giving advice, answering facts, or saying "I don't know" (base model habits) | C5, C6, C8 in the eval; extra examples of those cases in the data |
-| Crisis message missed or answered by the model | `safety.py` runs before the model; crisis examples kept out of training; C4 at 100% |
-| Eval scores look good because eval leaked into training | Leakage filter in Phase 1; eval scenarios never given to the generator |
-| Mira's scripts change and break the build | Mira checked out at a pinned commit |
-| Training hits the 6-hour CI limit | Mira's checkpoint cache resumes it |
-| File runs with the wrong prompt | Same `--system_prompt` for training and packaging |
-| Neural model is worse than the rules | Gate 6 blocks the release; the rule-based version stays the default |
+| Model memorizes frames, can't copy new words | R6 with held-out words; char-level Model A; validation-loss stopping |
+| Model drops or garbles their words | R2 and R3 in every eval; hand rating |
+| Model B's base habits leak (answers, advice, "as an AI") | R5; examples of reflected questions about the world in the data |
+| Eval leaks into training | Automatic overlap check in Gate 1 |
+| Rule-generated targets have mistakes | Mirror frames are correct by construction; other sources filtered; hand rating |
+| Mira's scripts change | Pinned commit |
+| CI time limit | Mira's checkpoint cache resumes training |
+| Results look better than they are | Same eval for all three systems; baseline reported; R7 with real people |
 
-## Effort
+## Order of work
 
-| Phase | Work | Runs where |
+| Step | Needs | Where |
 |---|---|---|
-| 0 | Eval scenarios + checks | Here, pure Python |
-| 1–2 | Dataset generator, teacher fixes, hand rating | Here, pure Python |
-| 3 | Training workflow | GitHub Actions |
-| 4–5 | Fine-tune + package | GitHub Actions, a few hours per run |
-| 6 | Eval + side-by-side rating | Here + an hour of your rating time |
-| 7 | Release, runner, README | Here |
+| Phase 0: eval + baseline | Plain Python | This repo |
+| Phase 1: dataset + Gate 1 | Plain Python + your 200-pair rating | This repo |
+| Phase 2: Model A | PyTorch, laptop CPU | Locally or CI |
+| Phase 3: Model B | GitHub Actions | CI |
+| Phase 4: sessions with people | Both models + a few volunteers | Locally |
+| Phase 5: write-up | Results from all phases | This repo |
 
-Phases 0–2 need no installs and are the bulk of the work. Start there.
+Phases 0 and 1 are most of the work and need no installs. Start there.
