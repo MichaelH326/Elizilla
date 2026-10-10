@@ -3,9 +3,8 @@ name: Train neural Elizilla
 # Full run: teacher-written profiles (parallel) -> simulated people ->
 # Elizilla + teacher replies (parallel) -> clean -> fine-tune -> package
 # elizilla-neural.mdlo -> eval against rule-based Elizilla.
-# See DATA_PLAN.md and NEURAL_PLAN.md. On a private repository every job
-# minute counts against the account's Actions allowance; total minutes are
-# roughly shards x teacher hours + training time.
+# See DATA_PLAN.md and NEURAL_PLAN.md. Free on a public repository (4-core
+# runners, up to 20 jobs at once).
 
 on:
   workflow_dispatch:
@@ -16,11 +15,11 @@ on:
         default: phi-3.5-mini
         options: [none, smollm2-1.7b, phi-3.5-mini, qwen2.5-7b]
       shards:
-        description: "Parallel teacher jobs (each up to ~5.5 h)"
-        default: "4"
+        description: "Parallel teacher jobs (each up to ~5.5 h; public repos run up to 20 at once)"
+        default: "20"
       per_situation:
         description: "Profiles per situation"
-        default: "2"
+        default: "6"
       per_profile:
         description: "Conversations per profile"
         default: "4"
@@ -30,8 +29,8 @@ on:
         default: HuggingFaceTB/SmolLM2-360M-Instruct
         options: [HuggingFaceTB/SmolLM2-135M-Instruct, HuggingFaceTB/SmolLM2-360M-Instruct, Qwen/Qwen2.5-0.5B-Instruct]
       steps:
-        description: "Fine-tune steps"
-        default: "400"
+        description: "Fine-tune steps (training stops after 4 h either way and still packages)"
+        default: "300"
       quant:
         description: "q8_0 (no build step) or Q4_K_M (smaller)"
         default: q8_0
@@ -61,8 +60,27 @@ jobs:
           echo "n=$N" >> "$GITHUB_OUTPUT"
           echo "shards=$(python3 -c "import json; print(json.dumps(list(range($N))))")" >> "$GITHUB_OUTPUT"
 
+  # Download the teacher once into the cache, so the parallel jobs don't
+  # all pull gigabytes from Hugging Face at the same moment.
+  teacher:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - if: inputs.teacher != 'none'
+        uses: actions/cache@v4
+        with:
+          path: models
+          key: teacher-${{ inputs.teacher }}
+      - if: inputs.teacher != 'none'
+        run: |
+          pip install huggingface_hub
+          python neural/get_teacher.py ${{ inputs.teacher }} --out models
+          ls -lh models
+
   profiles:
-    needs: setup
+    needs: [setup, teacher]
     runs-on: ubuntu-latest
     timeout-minutes: 350
     strategy:

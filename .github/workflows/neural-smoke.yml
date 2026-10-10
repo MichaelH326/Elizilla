@@ -8,6 +8,12 @@ name: Neural smoke test (whole pipeline, tiny scale)
 
 on:
   workflow_dispatch:
+    inputs:
+      teacher:
+        description: "Teacher to test"
+        type: choice
+        default: smollm2-1.7b
+        options: [smollm2-1.7b, phi-3.5-mini, qwen2.5-7b]
 
 env:
   PYTHONUNBUFFERED: "1"
@@ -45,9 +51,9 @@ jobs:
       - name: Dataset builds (stand-in teacher)
         run: python neural/make_dataset.py --teacher fake --per-situation 1 --per-profile 1 --out-dir data
 
-      - name: Real teacher works (2 situations, smallest teacher)
+      - name: Real teacher works (3 situations)
         run: |
-          T=$(python neural/get_teacher.py smollm2-1.7b --out models | tail -1)
+          T=$(python neural/get_teacher.py ${{ inputs.teacher || 'smollm2-1.7b' }} --out models | tail -1)
           python neural/profiles.py --teacher "$T" --limit 3 --per-situation 1 --show-rejected --out t_profiles.jsonl
           python neural/simulate.py t_profiles.jsonl --per-profile 1 --out t_people.jsonl
           python neural/build.py t_people.jsonl --teacher "$T" --out t_built.jsonl
