@@ -54,14 +54,14 @@ behaviour is a new file, not an edit to the engine.
 - Developer feedback commands, `/good` and `/bad`: good replies are added to the corpus and bad ones are blocked, so the SLM improves with use.
 - Learn new vocabulary: unknown words that come up repeatedly get offered as category candidates for review.
 
+### Phase 4 (experiment): Tiny neural reranker
+- Train a tiny pure-Python neural model (no numpy) only to *rank* the SLM's candidates, not to generate them.
+- Keep it only if it beats the trigram ranking on the Phase 1 eval.
+
 ### Phase 5: Neural Elizilla (standalone model)
 Distill the rule-based Elizilla into a small fine-tuned model packaged as a
 GGUF `.mdlo`, like Mira, that runs without Elizilla's code. Full plan, with
 gates, risks and decisions: [NEURAL_PLAN.md](NEURAL_PLAN.md).
-
-### Phase 4 (experiment): Tiny neural reranker
-- Train a tiny pure-Python neural model (no numpy) only to *rank* the SLM's candidates, not to generate them.
-- Keep it only if it beats the trigram ranking on the Phase 1 eval.
 
 ## Principles
 - Pure Python standard library only.
