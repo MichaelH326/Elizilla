@@ -51,7 +51,9 @@ def is_weak(rule, message, reply):
 def best_candidate(message, candidates, earlier, floor=0.0):
     """The candidate that passes every check and reuses the most of the
     person's words, if it reuses more than `floor` (what Elizilla managed)."""
-    ok = [c for c in candidates if not problems(message, c, earlier)]
+    # Elizilla asks one short question at a time; so must the teacher.
+    ok = [c for c in candidates if not problems(message, c, earlier)
+          and c.count("?") == 1 and len(c.split()) <= 30]
     if not ok:
         return None
     best = max(ok, key=lambda c: copy_score(message, c) or 0)
@@ -87,10 +89,12 @@ class Builder:
                     cands = self.teacher.replies(history + [(line, None)], n=3)
                     fixed = best_candidate(line, cands, earlier, floor=0.0 if bad else (copy_score(line, reply) or 0))
                     source = "teacher" if fixed else source
-                if not fixed and bad:
+                if not fixed:
+                    # Broken, or ignores everything they said ("How are things
+                    # with your bestie?"): a mirror of their own words is better.
                     m = mirror(line, rng)
-                    fixed = m if not problems(line, m, earlier) else None
-                    source = "mirror" if fixed else source
+                    if not problems(line, m, earlier) and (bad or (copy_score(line, m) or 0) > 0):
+                        fixed, source = m, "mirror"
                 if fixed:
                     reply = fixed
                     bot.last_bot = reply                 # keep the engine's state in step
