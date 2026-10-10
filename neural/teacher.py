@@ -63,8 +63,12 @@ Rules:
 - Casual texting voice: mostly lowercase, short, some missing apostrophes, occasional slang. Vary it.
 - 8 messages, each 3 to 20 words, each a new thing they'd say as the chat goes on (details, feelings, people involved, what happened next).
 - Ordinary everyday life only. Nothing about self-harm, suicide, abuse or violence.
+- They are talking about their own life. They are not asking for help, advice, or favours.
 - Reply with JSON only, in this shape:
-{"facts": ["short fact", "short fact", "short fact"], "lines": ["message 1", "message 2", "..."]}"""
+{"facts": ["short fact", "short fact", "short fact"], "lines": ["message 1", "message 2", "..."]}
+
+Example for "i burned dinner again":
+{"facts": ["cooks for roommates", "made pasta", "smoke alarm went off"], "lines": ["ugh i burned dinner again", "it was supposed to be pasta", "the smoke alarm went off and everything", "my roommates were starving lol", "we just ordered pizza in the end", "i feel kinda dumb honestly", "i really wanted to get better at cooking this year", "maybe tomorrow ill try something easier"]}"""
 
 
 class Teacher:
@@ -97,8 +101,7 @@ class Teacher:
         return [l for l in lines if l][:n]
 
     def profile(self, situation):
-        user = (f"Situation: {situation['event']} (about: {situation['about']}; "
-                f"they feel {situation['mood']}).")
+        user = f'Write the JSON for "{situation["event"]}". They feel {situation["mood"]}.'
         text = self._chat(PROFILE_SYSTEM, user, max_tokens=400, temperature=0.9)
         return parse_profile(text)
 
@@ -129,7 +132,10 @@ def parse_profile(text):
             rough = re.split(r"(?<=[.!?])\s+", text)
         data = {"facts": data.get("facts", []),
                 "lines": [re.sub(r"^\s*(?:\d+[.)]|[-*•])\s*", "", l).strip().strip('"') for l in rough]}
-    lines = [str(l).strip() for l in data.get("lines", []) if str(l).strip()]
+    # Drop labels the model adds ("Text:", "Message 3:") and lines that echo the prompt.
+    lines = [re.sub(r"^\s*(?:text|message|person|line|msg)\s*\d*\s*:\s*", "", str(l), flags=re.I).strip()
+             for l in data.get("lines", [])]
+    lines = [l for l in lines if l and not re.search(r"\bsituation\b|\(about:|write the json", l, re.I)]
     facts = [str(f).strip() for f in data.get("facts", []) if str(f).strip()]
     return {"facts": facts[:6], "lines": lines[:12]} if len(lines) >= 4 else None
 
