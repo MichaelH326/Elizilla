@@ -62,10 +62,12 @@ behaviour is a new file, not an edit to the engine.
 - Train a tiny pure-Python neural model (no numpy) only to *rank* the SLM's candidates, not to generate them.
 - Keep it only if it beats the trigram ranking on the Phase 1 eval.
 
-### Phase 5: Neural Elizilla (standalone model)
-Distill the rule-based Elizilla into a small fine-tuned model packaged as a
-GGUF `.mdlo`, like Mira, that runs without Elizilla's code. Full plan, with
-gates, risks and decisions: [NEURAL_PLAN.md](NEURAL_PLAN.md).
+### Phase 5: A neural SLM that turns what you said into a question
+Train two small models (a ~1M-parameter one from scratch, and a fine-tuned
+135M one) to listen and repeat what the person said back as an open
+question. Compare both with the rule-based version on the same eval,
+including words they've never seen and real conversations. Full plan, with
+gates and risks: [NEURAL_PLAN.md](NEURAL_PLAN.md).
 
 ## Principles
 - A conversation experiment, never a therapist, counsellor or advice source.
