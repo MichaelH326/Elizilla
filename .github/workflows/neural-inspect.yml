@@ -1,0 +1,42 @@
+name: Inspect neural data
+
+# Prints statistics and random samples from another run's data artifacts into
+# this run's log, so the data can be checked by eye without downloading it.
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Run id of a neural-train run"
+        required: true
+      pattern:
+        description: "Artifact name pattern (profiles-*, built-*, dataset)"
+        default: "built-*"
+      samples:
+        description: "Random samples per section"
+        default: "40"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          pattern: ${{ inputs.pattern }}
+          merge-multiple: true
+          path: parts
+      - name: Inspect
+        run: |
+          ls -la parts
+          FILES=$(ls parts/*.jsonl | grep -v -e people -e neural_data)
+          if ls parts/clean.jsonl >/dev/null 2>&1; then FILES=parts/clean.jsonl; fi
+          python neural/inspect_data.py $FILES --samples ${{ inputs.samples }}
