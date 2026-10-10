@@ -76,7 +76,7 @@ appear in training and are only used to test adaptation.
 | Option | How | Coverage | Trade-off |
 |---|---|---|---|
 | **A. Elizilla only** | Elizilla's rules + SLM + "mirror" question frames around the person's own words | Only what the rules and word lists understand, plus generic mirroring | No new tools. The model can't adapt much beyond Elizilla. |
-| **B. Elizilla + a larger open model as a second teacher (recommended)** | A bigger open-weight model (e.g. `Qwen2.5-7B-Instruct`, Apache-2.0), run inside the training workflow with llama.cpp, writes (1) varied user messages for every situation on the map and (2) candidate replies in Elizilla's style, shown real Elizilla conversations as examples. **Every** reply must pass Elizilla's checks (B1, B2, B13...) or it's thrown away. | Any situation on the map, and phrasings no rule would produce | The big model is used only to build data, never at chat time. No API, no internet at runtime. Data building takes longer in CI. |
+| **B. Elizilla + a larger open model as a second teacher (recommended)** | A bigger open-weight model writes varied situation scripts for the person's side and fills in replies only where Elizilla's rules don't understand. **Every** reply must pass Elizilla's checks or it's thrown away. Full design, teacher choice and CPU budget: [DATA_PLAN.md](DATA_PLAN.md). | Any situation on the map, and phrasings no rule would produce | The big model is used only to build data, never at chat time. No API, no internet at runtime. About 4–5 hours of parallel CI to build. |
 
 B is the only option that can really deliver "adapt to any situation". A
 gives a model that is roughly as limited as today's Elizilla.
@@ -122,31 +122,26 @@ Wherever Elizilla itself scores badly, fix Elizilla first.
 
 ## 5. Phase 1: the dataset (`neural/make_dataset.py`)
 
-1. **User side.** For every specific situation on the map (minus held-out
-   ones): many opening messages and multi-turn arcs, written in casual
-   voices (typos, slang, lowercase, one-word replies, rambling, sarcasm).
-   Sources: Elizilla's sentence frames × `lexicon.py`, the second teacher
-   (Decision 1), and ~300 hand-written messages from real-sounding people.
-2. **Conversations, not single replies.** 4–12 turns each, built by a
-   simulated person who stays in their situation, so B6–B10 and B15 actually
-   occur in the data: they give their name, repeat themselves, answer "idk",
-   ask "why?", ask a fact question, change the subject, come back to
-   something from earlier.
-3. **Elizilla-side replies**, from:
-   - today's Elizilla (rules + SLM), where its rules understand the message;
-   - mirror question frames around the person's own words (always correct);
-   - the second teacher, where Elizilla's rules don't understand the message.
+Full design: **[DATA_PLAN.md](DATA_PLAN.md)**. In short:
 
-   Every reply runs through the same automatic checks as the eval. A
-   conversation with any failing turn is dropped whole.
-4. **Balance.** Each area of the map within ±20% of its share; each behaviour
-   B3–B15 appears in at least 5% of conversations.
-5. **Kept out:** crisis content (that's `safety.py`'s job) and every held-out
-   situation (checked automatically, including near-duplicates).
-6. **Format:** Mira's JSONL (`{"messages": [system, user, assistant, ...]}`),
-   so Mira's training scripts take it unchanged. 20,000–40,000 conversations.
-7. **`dataset_card.json`:** counts per area, situation, behaviour and source;
-   seeds; hashes of everything that built it.
+1. **Situation map** (~2,500 situations, 15% held out for the eval, nothing
+   crisis-related).
+2. **Person side:** the teacher writes ~5,000 situation profiles once; plain
+   Python multiplies them into ~20,000 conversations of 4–12 turns, adding
+   names, typos, slang and a **behaviour schedule** that puts every behaviour
+   B3–B15 into at least 5% of conversations.
+3. **Elizilla side:** the **real `NeoEliza` engine** replies turn by turn, so
+   memory, names, one-word answers, repeats and "why?" come out exactly as
+   Elizilla does them. The teacher fills in only the weak turns (generic
+   fallbacks, replies that don't use the person's words), and mirror frames
+   back it up.
+4. **Checks** (`neural/checks.py`, shared with the eval) on every turn; any
+   failing turn drops the whole conversation.
+5. **Clean:** dedupe, balance, leakage and crisis checks, all of which fail
+   the build on any hit.
+6. **Human review** of 200 conversations, repeated until ≤ 5% contain a bad turn.
+7. **Output** in Mira's JSONL format, with a validation split by profile and
+   a `dataset_card.json`.
 
 **Gate 1:**
 - Mira's `validate_dataset.py` passes (English, length, ≥ 15% unique replies);
