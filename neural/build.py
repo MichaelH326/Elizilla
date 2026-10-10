@@ -26,7 +26,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.dirname(HERE))
 
 import safety  # noqa: E402
-from checks import copy_score, content_words, problems  # noqa: E402
+from checks import copy_score, problems  # noqa: E402
 from mirror import mirror  # noqa: E402
 from neo_eliza import NeoEliza  # noqa: E402
 from slm import SLM  # noqa: E402
@@ -44,8 +44,8 @@ def is_weak(rule, message, reply):
         return False
     if rule == "fallback":
         return True
-    score = copy_score(message, reply)
-    return score == 0 and len(content_words(message)) >= 2
+    # Ignores every word the person said: the teacher may do better.
+    return copy_score(message, reply) == 0
 
 
 def best_candidate(message, candidates, earlier):

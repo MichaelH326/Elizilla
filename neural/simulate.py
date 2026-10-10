@@ -27,7 +27,8 @@ REQUEST = ["can you help me with {about}", "can you write my essay for me", "cou
            "can you look up a recipe for me", "can you calculate my budget", "please write a poem for me",
            "can you fix my resume"]
 ABOUT_BOT = ["are you a robot", "what about you", "how are you", "are you real", "what do you think"]
-CALLBACK = ["anyway back to {about}", "i keep thinking about {about}", "but yeah {about} is still on my mind"]
+CALLBACK = ["i keep thinking about {about}", "but yeah {about} is still on my mind",
+            "still thinking about {about} honestly"]
 YES_NO = ["yeah", "yes", "no", "nope", "yep"]
 SLANG = ["tbh", "ngl", "lol", "honestly", "like", "i mean", "fr"]
 

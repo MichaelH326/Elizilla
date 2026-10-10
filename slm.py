@@ -200,6 +200,8 @@ def grammar_problem(q, known):
     if q[0] not in WH and not (q[0] in ("so", "and") and len(q) > 1 and q[1] in WH):
         if not known:
             return "no-wh-start"
+    if q[0] != "what" and (q[-2] == "like" or q[-4:-1] == ["like", "for", "you"]):
+        return "frame-mismatch"                      # "When does that feeling feel like for you?"
     if q[0] in ("when", "where") and pos_of(q[1]) != "AUX":
         return "fragment"                            # "When you feel lonely?"
     if not known and not any(is_verb(t) and not t.endswith("ing") for t in q):
@@ -257,7 +259,7 @@ def grammar_problem(q, known):
 
 # Intents whose wording must come only from their own lines: borrowing
 # "What got you into <topic>?" from a hobby reply misreads a question.
-OWN_WORDING = {"reflect-question"}
+OWN_WORDING = {"reflect-question", "ack-low", "ack-positive", "ack-neutral"}
 
 
 class SLM:
@@ -429,6 +431,8 @@ class SLM:
     def write(self, intent, slots, avoid=()):
         """Generate a reply for `intent`, filled with `slots`.
         Returns (reply or None, info)."""
+        if intent not in self.intent_models:
+            return None, {"rejected": {"too-few-examples": 1}}   # wording would be random
         allowed = {k for k, v in slots.items() if v}
         best, best_score, best_info = None, -1e9, {}
         rejected = Counter()
@@ -447,6 +451,9 @@ class SLM:
                 rejected["low-confidence"] += 1
                 continue
             filled = detokenize([slots[m.group(1)] if (m := SLOT_RX.fullmatch(t)) else t for t in toks])
+            if re.search(r"\b(\w+) \1\b", filled.lower()):
+                rejected["repeat"] += 1                  # a slot doubled a word: "time to to do"
+                continue
             if filled in avoid or any(s in avoid for s in re.split(r"(?<=[.!?])\s+", filled)):
                 rejected["already-said"] += 1
                 continue

@@ -1,6 +1,6 @@
 {
  "elizilla (rules)": {
-  "hard_pct": 100.0,
+  "hard_pct": 99.0,
   "rows": [
    {
     "id": "k-copy-1",
@@ -9,7 +9,7 @@
      "honestly my chemistry final is freaking me out"
     ],
     "replies": [
-     "What's the chemistry final like?"
+     "What kind of chemistry final?"
     ],
     "problems": []
    },
@@ -64,7 +64,7 @@
      "my soccer coach never lets me play"
     ],
     "replies": [
-     "What's the soccer coach like?"
+     "How do you feel about the soccer coach?"
     ],
     "problems": []
    },
@@ -75,7 +75,7 @@
      "i finally finished my first painting"
     ],
     "replies": [
-     "What's the first painting like?"
+     "What kind of first painting?"
     ],
     "problems": []
    },
@@ -108,7 +108,7 @@
      "my best friend found a new group of friends"
     ],
     "replies": [
-     "What kind of new group?"
+     "How are you feeling about the new group?"
     ],
     "problems": []
    },
@@ -119,7 +119,7 @@
      "our landlord is raising the rent again"
     ],
     "replies": [
-     "What's the landlord like?"
+     "What else comes to mind?"
     ],
     "problems": []
    },
@@ -130,7 +130,7 @@
      "i got cut from the volleyball team"
     ],
     "replies": [
-     "What's the volleyball team like?"
+     "What kind of volleyball team?"
     ],
     "problems": []
    },
@@ -169,14 +169,18 @@
    },
    {
     "id": "k-react-4",
-    "ok": true,
+    "ok": false,
     "turns": [
      "i passed my driving test today"
     ],
     "replies": [
      "I'm so sorry. What do you miss most about you?"
     ],
-    "problems": []
+    "problems": [
+     [
+      "mood-mismatch"
+     ]
+    ]
    },
    {
     "id": "k-detail-1",
@@ -207,7 +211,7 @@
      "the trip was fun but i spent way too much money"
     ],
     "replies": [
-     "What kind of trip?"
+     "What do you think made the trip so fun?"
     ],
     "problems": []
    },
@@ -279,12 +283,12 @@
    },
    {
     "id": "k-bot-1",
-    "ok": false,
+    "ok": true,
     "turns": [
      "do you have feelings?"
     ],
     "replies": [
-     "What's the feelings like?"
+     "We were talking about you, not me. What were you about to say?"
     ],
     "problems": []
    },
@@ -311,10 +315,10 @@
     ],
     "replies": [
      "What's it like at home with your sister?",
-     "What kind of speech?",
-     "It sounds like you have been writing it all week. What else comes to mind?",
-     "Anyway. What happened next?",
-     "It sounds like it is this saturday actually. How are you feeling about it now?"
+     "It sounds like you have to give a speech. What happened next?",
+     "It sounds like you have been writing it all week. How did that feel?",
+     "Anyway. What do you think is behind it?",
+     "It sounds like it is this saturday actually. What else comes to mind?"
     ],
     "problems": []
    },
@@ -330,9 +334,9 @@
     ],
     "replies": [
      "How do you feel about your new job?",
-     "What kind of hours?",
+     "The hours are early. How are you feeling about it now?",
      "That reminds me of when you said \"the hours are early\". How are the two connected?",
-     "If you could change one thing about this week, what would it be?",
+     "What's something you're looking forward to?",
      "What do you like most about it?"
     ],
     "problems": []
@@ -390,7 +394,7 @@
     ],
     "replies": [
      "Hi there. How are you feeling?",
-     "Meh. What else comes to mind?",
+     "Meh. What do you think is behind it?",
      "That's okay, we'll find something. What's something you've been thinking about more than usual?"
     ],
     "problems": []
@@ -405,7 +409,7 @@
     ],
     "replies": [
      "What's it like when your brother keeps reading your tests?",
-     "What kind of bugs?",
+     "It really bugs you. What else comes to mind?",
      "That's the second time you've said that. What's behind it?"
     ],
     "problems": []
@@ -425,14 +429,14 @@
    },
    {
     "id": "k-clar-1",
-    "ok": false,
+    "ok": true,
     "turns": [
      "my week was weird",
      "what do you mean"
     ],
     "replies": [
-     "Your week was weird. What else comes to mind?",
-     "What's the hardest part about it now?"
+     "Your week was weird. What happened next?",
+     "I phrased that badly. Let me ask more simply: how are you feeling right now?"
     ],
     "problems": []
    },
@@ -454,7 +458,7 @@
      "the heater in my apartment broke and its freezing"
     ],
     "replies": [
-     "What kind of heater?"
+     "Oof, that's a lot. How are you holding up?"
     ],
     "problems": []
    },
@@ -465,7 +469,7 @@
      "i missed my train this morning and was late"
     ],
     "replies": [
-     "What kind of train?"
+     "How are you feeling about it now?"
     ],
     "problems": []
    },
@@ -476,18 +480,18 @@
      "i sprained my ankle playing soccer"
     ],
     "replies": [
-     "What kind of ankle?"
+     "How often do you get time for soccer?"
     ],
     "problems": []
    },
    {
     "id": "h-copy-5",
-    "ok": false,
+    "ok": true,
     "turns": [
      "my account got hacked last night"
     ],
     "replies": [
-     "What kind of account?"
+     "It sounds like your account got hacked last night. How are you feeling about it now?"
     ],
     "problems": []
    },
@@ -531,7 +535,7 @@
      "me and my friend are drifting apart"
     ],
     "replies": [
-     "What kind of apart?"
+     "How long have you known your friend?"
     ],
     "problems": []
    },
@@ -581,12 +585,12 @@
    },
    {
     "id": "h-copy-14",
-    "ok": false,
+    "ok": true,
     "turns": [
      "i burned dinner again"
     ],
     "replies": [
-     "What kind of dinner?"
+     "You turned dinner again. What else comes to mind?"
     ],
     "problems": []
    },
@@ -603,12 +607,12 @@
    },
    {
     "id": "h-copy-16",
-    "ok": false,
+    "ok": true,
     "turns": [
      "im entering the science fair this year"
     ],
     "replies": [
-     "What's the fair like?"
+     "It sounds like you are entering the since fair this year. What else comes to mind?"
     ],
     "problems": []
    },
@@ -652,7 +656,7 @@
      "i had a huge fight with my best friend"
     ],
     "replies": [
-     "What kind of huge?"
+     "How long have you known your best friend?"
     ],
     "problems": []
    },
@@ -663,7 +667,7 @@
      "i tried a new korean food truck today"
     ],
     "replies": [
-     "It sounds like you tried a new korean food truck today. How are you feeling about it now?"
+     "It sounds like you tried a new korean food truck today. What else comes to mind?"
     ],
     "problems": []
    },
@@ -680,12 +684,12 @@
    },
    {
     "id": "h-mixed-1",
-    "ok": false,
+    "ok": true,
     "turns": [
      "were moving in together but im kind of nervous"
     ],
     "replies": [
-     "What kind of together?"
+     "So were moving in together, but you are kind of nervous. How are you balancing them?"
     ],
     "problems": []
    },
@@ -696,7 +700,7 @@
      "i just got glasses but i hate how they look"
     ],
     "replies": [
-     "That sounds draining. What's been the hardest part of your classes right now?"
+     "I hear you, that's a lot to carry. What's been the hardest part of your classes right now?"
     ],
     "problems": []
    },
@@ -709,9 +713,9 @@
      "my friends think i did it"
     ],
     "replies": [
-     "What kind of account?",
+     "Your account got hacked. What else comes to mind?",
      "What kind of weird stuff?",
-     "What do you like most about your friends?"
+     "How long have you known your friends?"
     ],
     "problems": []
    },
@@ -724,8 +728,8 @@
      "we ended up ordering pizza"
     ],
     "replies": [
-     "What's the dinner like?",
-     "What kind of roommates?",
+     "You turned dinner again. What else comes to mind?",
+     "It sounds like your roommates were really hungry. How are you feeling about it now?",
      "What kind of up ordering pizza?"
     ],
     "problems": []
@@ -740,8 +744,8 @@
     ],
     "replies": [
      "I'm sorry. What has the last little while been like for you?",
-     "He was fourteen. How long has it been like for you?",
-     "What else comes to mind?"
+     "He was fourteen. What else comes to mind?",
+     "How did that feel?"
     ],
     "problems": []
    },
@@ -754,9 +758,9 @@
      "now im just waiting"
     ],
     "replies": [
-     "What kind of raise?",
+     "It sounds like you asked for a raise. What else comes to mind?",
      "How are things with your manager?",
-     "What else comes to mind?"
+     "How did that feel?"
     ],
     "problems": []
    },
@@ -769,7 +773,7 @@
      "i was late for my exam"
     ],
     "replies": [
-     "What's the bus driver like?",
+     "What kind of bus driver?",
      "It sounds like you were standing right at the stop. How did that feel?",
      "What's the hardest part of the exam?"
     ],
@@ -784,8 +788,8 @@
      "im stuck on chapter three"
     ],
     "replies": [
-     "What's the novel like?",
-     "What kind of birds?",
+     "It sounds like you are writing a novel. How did that feel?",
+     "It sounds like it is about a girl who can talk to birds. What do you think is behind it?",
      "When did you start feeling stuck about it?"
     ],
     "problems": []
@@ -801,9 +805,9 @@
      "i just hope it doesnt rain"
     ],
     "replies": [
-     "What kind of road trip?",
+     "How do you feel about the road trip?",
      "Which one needs more of your energy right now, four or one car?",
-     "Leaving friday. What else comes to mind?",
+     "Leaving friday. How are you feeling about it now?",
      "Who have you been spending the most time with lately?",
      "Why do you hope it?"
     ],
@@ -820,7 +824,7 @@
     "replies": [
      "Hi there. How are you feeling?",
      "Nice to meet you, Sam. What brings you here today?",
-     "What's the ankle like?"
+     "It sounds like your ankle is killing you. What else comes to mind?"
     ],
     "problems": []
    }
@@ -831,11 +835,11 @@
     12
    ],
    "B2/held-out": [
-    8,
+    11,
     22
    ],
    "B3/known": [
-    3,
+    2,
     4
    ],
    "B3/held-out": [
@@ -855,7 +859,7 @@
     2
    ],
    "B5/held-out": [
-    0,
+    1,
     2
    ],
    "B6/known": [
@@ -883,7 +887,7 @@
     1
    ],
    "B10/known": [
-    1,
+    2,
     2
    ],
    "B11/known": [
@@ -895,18 +899,18 @@
     2
    ],
    "B14/known": [
-    1,
+    2,
     2
    ]
   },
   "known": [
-   25,
+   26,
    36
   ],
   "held_out": [
-   14,
+   18,
    32
   ],
-  "adapt": 0.63
+  "adapt": 0.78
  }
 }

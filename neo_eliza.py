@@ -39,7 +39,7 @@ import re
 import sys
 from collections import Counter, defaultdict, deque
 
-from lexicon import WORD_TO_CLASS, gerund
+from lexicon import NOUNS, WORD_TO_CLASS, gerund
 from rules import RULES, PHRASES
 from sentence import normalize, parse, main_frame, reflect
 from slm import SLM
@@ -384,6 +384,7 @@ FILLER_WORDS = {"no", "yes", "yeah", "ok", "okay", "well", "um", "uh", "so", "oh
 GENERIC_HITS = {"@self", "@you", "@it", "@they", "@other", "be", "have", "do", "get", "go"}
 
 WH_START = {"what", "who", "when", "where", "how", "why", "which"}
+CANNOT_IDIOMS = {"wait", "believe", "stop", "help", "stand", "even", "deal"}
 CLOSED_QUESTION = re.compile(
     r"(?:do|does|did|is|are|was|were|have|has|can|could|would|will|should|am)\b", re.I)
 
@@ -486,6 +487,8 @@ class NeoEliza:
                 hits = match(rule, frame)
                 if hits is None:
                     continue
+                if rule["name"] == "cannot" and frame.verb in CANNOT_IDIOMS:
+                    continue      # "i cant wait", "i cant believe it" aren't about ability
                 slots = slots_for(rule, frame, frames)
                 score = rule["weight"] + 2 * len(rule["when"])
                 if frame is main:
@@ -514,6 +517,8 @@ class NeoEliza:
                     continue
                 if cat != "@thing" and len(parts) < 2:
                     continue      # single known words have their own rules
+                if len(parts) < 2 and head not in NOUNS:
+                    continue      # a lone unknown word ("dunno", "forth") is usually not a thing
                 if best is None or len(d) > len(best):
                     best = d
         return best

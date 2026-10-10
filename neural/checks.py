@@ -12,7 +12,7 @@ Hard checks (any failure means the reply can't be used or scores as a miss):
   banned           "I don't know", "as an AI", advice ("you should") ...
   format           lists, markdown, emoji, links
   point-of-view    repeats the person's "my X" without turning it into "your X"
-  repeat           the same reply as earlier in the conversation
+  repeat           the same reply as earlier in the conversation, or a doubled word
   answered         a question about the world got an answer (new numbers or names)
   mood-mismatch    an upbeat question ("best part", "enjoy most") about something bad
 """
@@ -36,6 +36,11 @@ FORMAT = re.compile(r"[*_`#\[\]{}|<>]|^\s*(?:\d+[.)]|-)\s|https?://|www\.|"
 SENTENCES = re.compile(r"(?<=[.!?])\s+")
 UPBEAT = re.compile(r"\b(?:best part|enjoy|love most|like most|highlight|going well|so great|"
                     r"that's great|nice!|oh nice|love to hear|good to hear|glad)\b", re.I)
+POSITIVE = re.compile(r"\b(?:happy|excited|great|awesome|amazing|love|loved|proud|glad|won|promoted|"
+                      r"passed|finally|yay|best|fun|good news|got into|got an a)\b", re.I)
+DOWNBEAT = re.compile(r"\b(?:sounds (?:rough|hard|heavy|draining|exhausting|stressful|frustrating|lonely)|"
+                      r"i'm sorry|so sorry|oof|ugh|aw\b|that's a lot|tough spot|not easy|hardest part|"
+                      r"weighing on you|holding up|wearing you out)", re.I)
 NEGATIVE = re.compile(r"\b(?:hurts?|hurting|sick|died|dead|lost|lose|losing|failed|fail|broke|broken|"
                       r"sad|awful|terrible|horrible|worst|hate|hates|mad|angry|scared|worried|worry|"
                       r"worrying|stressed|anxious|nervous|lonely|alone|cried|crying|sucks?|unfair|"
@@ -114,9 +119,10 @@ def problems(message, reply, earlier=()):
         if a == "my" and b not in EXTRA_STOP and re.search(rf"\bmy {re.escape(b)}\b", low):
             out.append("point-of-view")
             break
-    if r in earlier:
+    if r in earlier or re.search(r"\b(\w+) \1\b", low):
         out.append("repeat")
-    if UPBEAT.search(r) and NEGATIVE.search(message):
+    if (UPBEAT.search(r) and NEGATIVE.search(message)) or (DOWNBEAT.search(r) and POSITIVE.search(message)
+                                                          and not NEGATIVE.search(message)):
         out.append("mood-mismatch")
     if is_world_question(message):
         said = set(re.findall(r"[a-z0-9']+", message.lower()))
